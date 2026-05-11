@@ -1,0 +1,32 @@
+{
+  "dataset_meta": {
+    "version": "1.0.0",
+    "created_at": "2026-05-10",
+    "rubric_version": "eval_rubric.md",
+    "schema_version": "eval_dataset_schema.md",
+    "total_prompts": 300,
+    "seeded_prompts": 0,
+    "breakdown": {
+      "by_tier": {
+        "normal": 180,
+        "edge": 90,
+        "adversarial": 30
+      },
+      "by_category": {
+        "dining": 60,
+        "travel": 60,
+        "events": 60,
+        "purchases": 60,
+        "scheduling": 60
+      },
+      "by_category_and_tier": {
+        "dining":     { "normal": 36, "edge": 18, "adversarial": 6 },
+        "travel":     { "normal": 36, "edge": 18, "adversarial": 6 },
+        "events":     { "normal": 36, "edge": 18, "adversarial": 6 },
+        "purchases":  { "normal": 36, "edge": 18, "adversarial": 6 },
+        "scheduling": { "normal": 36, "edge": 18, "adversarial": 6 }
+      }
+    }
+  },
+  "prompts": []
+}
