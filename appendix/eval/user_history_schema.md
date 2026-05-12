@@ -2,12 +2,12 @@
 
 ## Overview
 
-The recommendation engine ranks restaurant suggestions using the user's behavioral history — not stated preferences. Two data structures drive this:
+The recommendation engine ranks restaurant suggestions using the user's behavioral history — not stated preferences. Two data structures drive this, both **derived and computed** from the raw booking events stored in SQLite (see Section 6 of `docs/source_of_truth.md`). They are not stored directly by users — the system builds and updates them after every `log_action` call.
 
-1. **Restaurant History Records** — one record per unique venue the user has visited, within the lookback window. These are the raw signals the engine retrieves.
-2. **Preference Signals** — derived aggregates computed from the history records. Used by the engine to rank suggestions when no venue-level history exists for a specific query.
+1. **Restaurant History Records** — one record per unique venue visited, aggregated across all raw booking events within the lookback window. These are what `retrieve_behavioral_context` queries to rank results.
+2. **Preference Signals** — derived aggregates across all history records. Used as a fallback when no venue-level history exists for the specific location or time being queried.
 
-This file is the template. Fill in `user_history.json` with records derived from the user's actual action history before labeling the dataset.
+This file is the schema template. `user_history.json` contains the seeded demo data for `demo_user_01` used in eval labeling.
 
 ---
 
@@ -22,6 +22,15 @@ This file is the template. Fill in `user_history.json` with records derived from
 **`day_type`:**
 - `weekday`: Monday–Friday
 - `weekend`: Saturday or Sunday
+
+**Natural language → `time_bucket` inference (used by the agent when parsing user intent):**
+
+| User says | Resolves to |
+|---|---|
+| "lunch", "midday" | `afternoon` |
+| "dinner", "evening", "tonight", "night" | `evening` |
+| "brunch", "breakfast", "morning" | `morning` |
+| "late night", "late dinner", "after 10" | `late_night` |
 
 ---
 
@@ -105,6 +114,18 @@ Derived from the restaurant history records. Computed once and stored alongside 
 ### Ranking rule
 
 Within each preference array, records are sorted by `visit_count` descending. `rank: 1` is the most visited. Ties are broken by recency of the most recent visit in that group.
+
+---
+
+## How `retrieve_behavioral_context` uses this schema
+
+When the agent calls `retrieve_behavioral_context` (step 2 of the agent loop), the tool:
+
+1. Filters `restaurant_history` records where `location_bucket` exactly matches the query location AND `typical_time_bucket` matches the query `time_bucket` AND cuisine matches (if a filter was provided)
+2. If matching records exist → sets `history_context_applies: true` and returns them ranked by `visit_count` then `last_visited`
+3. If no records match → sets `history_context_applies: false` and returns `preference_signals` only as a fallback
+
+The agent uses the returned records to re-rank results from `search_restaurants`. It must not claim personalization ("you usually visit…") when `history_context_applies: false`.
 
 ---
 
