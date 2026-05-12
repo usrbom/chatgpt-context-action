@@ -7,21 +7,23 @@ take any idea from concept to functional prototype.
 
 This section governs how all contributors — regardless of Git experience — should start and finish work on this repo. Claude Code enforces this flow automatically.
 
-### Session Start (run every time before touching any file)
+### Trigger: "starting changes: {feature_name}"
 
-1. Pull the latest changes from master:
-   ```
-   git pull origin master
-   ```
+When the collaborator says **"starting changes: {feature_name}"** (e.g., `starting changes: dining-prompts`), Claude Code will:
+
+1. Pull the latest changes from `origin/master`
 2. Create a development branch named `{git_username}_{feature_name}`, where:
    - `git_username` = the name from `git config user.name`, lowercased, spaces replaced with underscores
-   - `feature_name` = a short description of what you are working on (e.g., `dining-prompts`, `eval-rubric`, `travel-prompts`)
-   - Example: `utkarsh_dining-prompts`
-3. Switch to that branch. All work happens here — never commit directly to master.
+   - `feature_name` = exactly what the collaborator typed after the colon, lowercased, spaces replaced with hyphens
+   - Example: `starting changes: dining prompts` → branch `utkarsh_dining-prompts`
+3. Switch to that branch
+4. Confirm to the collaborator which branch they are now on and that they can start making changes
+
+All work happens on this branch — Claude Code will never commit directly to master.
 
 ### During Work
 
-Make changes normally. Claude Code will track all modified and new files on the dev branch.
+Make changes normally. Claude Code tracks all modified and new files on the dev branch.
 
 ### Trigger: "done with changes"
 
