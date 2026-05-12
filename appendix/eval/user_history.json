@@ -1,0 +1,272 @@
+{
+  "meta": {
+    "note": "MOCK DATA — replace with records derived from real user action history before production labeling",
+    "user_id": "demo_user_01",
+    "computed_at": "2026-05-10T00:00:00Z",
+    "window_days": 90,
+    "schema_version": "user_history_schema.md"
+  },
+
+  "restaurant_history": [
+    {
+      "record_id": "RH_001",
+      "user_id": "demo_user_01",
+      "venue_name": "Piccolo Sogno",
+      "venue_id": null,
+      "location_bucket": "River North",
+      "cuisine": "Italian",
+      "typical_time_bucket": "evening",
+      "typical_day_type": "weekday",
+      "visit_count": 5,
+      "last_visited": "2026-04-28",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_002",
+      "user_id": "demo_user_01",
+      "venue_name": "RPM Italian",
+      "venue_id": null,
+      "location_bucket": "River North",
+      "cuisine": "Italian",
+      "typical_time_bucket": "evening",
+      "typical_day_type": "weekday",
+      "visit_count": 4,
+      "last_visited": "2026-04-15",
+      "party_size_avg": 2.5,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_003",
+      "user_id": "demo_user_01",
+      "venue_name": "Bavette's Bar & Boeuf",
+      "venue_id": null,
+      "location_bucket": "River North",
+      "cuisine": "American",
+      "typical_time_bucket": "evening",
+      "typical_day_type": "weekday",
+      "visit_count": 3,
+      "last_visited": "2026-05-02",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_004",
+      "user_id": "demo_user_01",
+      "venue_name": "GT Fish & Oyster",
+      "venue_id": null,
+      "location_bucket": "River North",
+      "cuisine": "Seafood",
+      "typical_time_bucket": "evening",
+      "typical_day_type": "weekend",
+      "visit_count": 2,
+      "last_visited": "2026-03-22",
+      "party_size_avg": 3.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_005",
+      "user_id": "demo_user_01",
+      "venue_name": "Chicago Riverwalk Café",
+      "venue_id": null,
+      "location_bucket": "Riverfront",
+      "cuisine": "American",
+      "typical_time_bucket": "afternoon",
+      "typical_day_type": "weekday",
+      "visit_count": 4,
+      "last_visited": "2026-05-01",
+      "party_size_avg": 1.5,
+      "counterparty_type": null,
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_006",
+      "user_id": "demo_user_01",
+      "venue_name": "BOKA",
+      "venue_id": null,
+      "location_bucket": "Riverfront",
+      "cuisine": "New American",
+      "typical_time_bucket": "afternoon",
+      "typical_day_type": "weekday",
+      "visit_count": 3,
+      "last_visited": "2026-04-10",
+      "party_size_avg": 2.0,
+      "counterparty_type": null,
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_007",
+      "user_id": "demo_user_01",
+      "venue_name": "Beatrix",
+      "venue_id": null,
+      "location_bucket": "Riverfront",
+      "cuisine": "American",
+      "typical_time_bucket": "afternoon",
+      "typical_day_type": "weekday",
+      "visit_count": 2,
+      "last_visited": "2026-03-18",
+      "party_size_avg": 1.0,
+      "counterparty_type": null,
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_008",
+      "user_id": "demo_user_01",
+      "venue_name": "Batter & Berries",
+      "venue_id": null,
+      "location_bucket": "Lincoln Park",
+      "cuisine": "American",
+      "typical_time_bucket": "morning",
+      "typical_day_type": "weekend",
+      "visit_count": 3,
+      "last_visited": "2026-04-27",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_009",
+      "user_id": "demo_user_01",
+      "venue_name": "Jam",
+      "venue_id": null,
+      "location_bucket": "Wicker Park",
+      "cuisine": "American",
+      "typical_time_bucket": "morning",
+      "typical_day_type": "weekend",
+      "visit_count": 2,
+      "last_visited": "2026-04-20",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_010",
+      "user_id": "demo_user_01",
+      "venue_name": "Dove's Luncheonette",
+      "venue_id": null,
+      "location_bucket": "Wicker Park",
+      "cuisine": "Mexican",
+      "typical_time_bucket": "morning",
+      "typical_day_type": "weekend",
+      "visit_count": 2,
+      "last_visited": "2026-05-03",
+      "party_size_avg": 1.5,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_011",
+      "user_id": "demo_user_01",
+      "venue_name": "The Gage",
+      "venue_id": null,
+      "location_bucket": "Loop",
+      "cuisine": "American",
+      "typical_time_bucket": "afternoon",
+      "typical_day_type": "weekday",
+      "visit_count": 3,
+      "last_visited": "2026-04-22",
+      "party_size_avg": 2.7,
+      "counterparty_type": "business",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_012",
+      "user_id": "demo_user_01",
+      "venue_name": "Cindy's",
+      "venue_id": null,
+      "location_bucket": "Loop",
+      "cuisine": "American",
+      "typical_time_bucket": "afternoon",
+      "typical_day_type": "weekday",
+      "visit_count": 2,
+      "last_visited": "2026-03-30",
+      "party_size_avg": 3.0,
+      "counterparty_type": "business",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_013",
+      "user_id": "demo_user_01",
+      "venue_name": "Au Cheval",
+      "venue_id": null,
+      "location_bucket": "West Loop",
+      "cuisine": "American",
+      "typical_time_bucket": "late_night",
+      "typical_day_type": "weekday",
+      "visit_count": 3,
+      "last_visited": "2026-05-06",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_014",
+      "user_id": "demo_user_01",
+      "venue_name": "The Purple Pig",
+      "venue_id": null,
+      "location_bucket": "River North",
+      "cuisine": "Mediterranean",
+      "typical_time_bucket": "late_night",
+      "typical_day_type": "weekday",
+      "visit_count": 2,
+      "last_visited": "2026-04-18",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    },
+    {
+      "record_id": "RH_015",
+      "user_id": "demo_user_01",
+      "venue_name": "Girl & the Goat",
+      "venue_id": null,
+      "location_bucket": "West Loop",
+      "cuisine": "American",
+      "typical_time_bucket": "evening",
+      "typical_day_type": "weekday",
+      "visit_count": 1,
+      "last_visited": "2026-02-14",
+      "party_size_avg": 2.0,
+      "counterparty_type": "personal",
+      "window_days": 90
+    }
+  ],
+
+  "preference_signals": {
+    "computed_at": "2026-05-10T00:00:00Z",
+    "window_days": 90,
+
+    "cuisines": [
+      { "cuisine": "American", "visit_count": 22, "rank": 1 },
+      { "cuisine": "Italian", "visit_count": 9, "rank": 2 },
+      { "cuisine": "Mediterranean", "visit_count": 2, "rank": 3 },
+      { "cuisine": "Seafood", "visit_count": 2, "rank": 4 },
+      { "cuisine": "New American", "visit_count": 3, "rank": 5 },
+      { "cuisine": "Mexican", "visit_count": 2, "rank": 6 }
+    ],
+
+    "neighborhoods": [
+      { "location_bucket": "River North", "visit_count": 16, "rank": 1 },
+      { "location_bucket": "Riverfront", "visit_count": 9, "rank": 2 },
+      { "location_bucket": "Loop", "visit_count": 5, "rank": 3 },
+      { "location_bucket": "West Loop", "visit_count": 4, "rank": 4 },
+      { "location_bucket": "Lincoln Park", "visit_count": 3, "rank": 5 },
+      { "location_bucket": "Wicker Park", "visit_count": 4, "rank": 6 }
+    ],
+
+    "time_preferences": [
+      { "time_bucket": "evening", "visit_count": 15, "rank": 1 },
+      { "time_bucket": "afternoon", "visit_count": 14, "rank": 2 },
+      { "time_bucket": "morning", "visit_count": 7, "rank": 3 },
+      { "time_bucket": "late_night", "visit_count": 5, "rank": 4 }
+    ],
+
+    "day_preferences": [
+      { "day_type": "weekday", "visit_count": 29, "rank": 1 },
+      { "day_type": "weekend", "visit_count": 12, "rank": 2 }
+    ]
+  }
+}
