@@ -165,7 +165,9 @@ Used in both raw events and derived records. Must be applied consistently everyw
 
 ### Derived Data Layer (for RAG)
 
-The RAG system aggregates raw booking events into two computed structures. These are rebuilt after every `log_action` call and are what `retrieve_behavioral_context` queries against.
+**Canonical schema file: `appendix/eval/user_history_schema.md`**
+
+The RAG system aggregates raw booking events into two computed structures. These are rebuilt after every `log_action` call and are what `retrieve_behavioral_context` queries against. They are the stored output of the RAG computation described in Section 7 — not raw user input.
 
 **Restaurant History Record** — one record per unique venue visited, aggregated across all raw events:
 
@@ -238,7 +240,7 @@ If the API times out after one retry, explain in plain language and provide a li
 
 **Fallback:** If retrieval returns nothing relevant, rank results randomly (or by rating/price).
 
-**Freshness:** After every `log_action` call, re-embed the new record and update co-occurrence counts.
+**Freshness:** After every `log_action` call, re-embed the new record and update co-occurrence counts. The output of this aggregation is stored as **Restaurant History Records and Preference Signals** — see Section 6 (Derived Data Layer) for the full schemas, and `appendix/eval/user_history_schema.md` for the canonical schema reference. These are what `retrieve_behavioral_context` queries on every turn.
 
 **Seed data:** Populate the store with 30–60 synthetic restaurant booking events for a demo user, weighted to create at least two replicable behavioral patterns (e.g. user books Italian restaurants on Friday evenings; user consistently chooses quieter spots when party size is 2). Do not seed stated preferences — behavioral inference only.
 
