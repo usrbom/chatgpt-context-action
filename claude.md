@@ -1,4 +1,4 @@
-# Product Builder Agent - Spec Document
+# Product Builder Agent - Spec Document for PM delivery class
 **Purpose:** Source-of-truth spec for an AI agent that encodes
 product taste, competitive research, and a creation framework to
 take any idea from concept to functional prototype.
