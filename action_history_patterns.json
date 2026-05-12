@@ -15,6 +15,7 @@
         "action": "book_dining",
         "location_bucket": "Riverfront",
         "time_bucket": "afternoon",
+        "day_type": null,
         "counterparty_type": null
       },
       "consequent": {
@@ -22,12 +23,7 @@
         "action": "purchase_event_ticket",
         "venue_pattern": "Millennium Park"
       },
-      "statistics": {
-        "support": 5,
-        "co_occurrences": 4,
-        "confidence": 0.80,
-        "window_days": 90
-      },
+      "statistics": { "support": 5, "co_occurrences": 4, "confidence": 0.80, "window_days": 90 },
       "plain_english_template": "After lunch near Riverfront, this user has visited Millennium Park 80% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -39,6 +35,7 @@
         "action": "purchase_event_ticket",
         "location_bucket": null,
         "time_bucket": "evening",
+        "day_type": "weekday",
         "counterparty_type": null
       },
       "consequent": {
@@ -46,12 +43,7 @@
         "action": "schedule_rideshare",
         "venue_pattern": null
       },
-      "statistics": {
-        "support": 4,
-        "co_occurrences": 3,
-        "confidence": 0.75,
-        "window_days": 90
-      },
+      "statistics": { "support": 4, "co_occurrences": 3, "confidence": 0.75, "window_days": 90 },
       "plain_english_template": "After booking a Friday evening event, this user has scheduled a rideshare home 75% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -63,6 +55,7 @@
         "action": "book_dining",
         "location_bucket": "River North",
         "time_bucket": "evening",
+        "day_type": null,
         "counterparty_type": null
       },
       "consequent": {
@@ -70,12 +63,7 @@
         "action": "complete_purchase",
         "venue_pattern": "cocktail bar"
       },
-      "statistics": {
-        "support": 6,
-        "co_occurrences": 4,
-        "confidence": 0.67,
-        "window_days": 90
-      },
+      "statistics": { "support": 6, "co_occurrences": 4, "confidence": 0.67, "window_days": 90 },
       "plain_english_template": "After dinner in River North, this user has stopped at a cocktail bar 67% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -86,7 +74,8 @@
         "category": "dining",
         "action": "book_dining",
         "location_bucket": null,
-        "time_bucket": "weekend",
+        "time_bucket": "morning",
+        "day_type": "weekend",
         "counterparty_type": null
       },
       "consequent": {
@@ -94,12 +83,7 @@
         "action": "purchase_event_ticket",
         "venue_pattern": "museum"
       },
-      "statistics": {
-        "support": 5,
-        "co_occurrences": 3,
-        "confidence": 0.60,
-        "window_days": 90
-      },
+      "statistics": { "support": 5, "co_occurrences": 3, "confidence": 0.60, "window_days": 90 },
       "plain_english_template": "After weekend brunch, this user has visited a museum or gallery 60% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -111,6 +95,7 @@
         "action": "book_dining",
         "location_bucket": null,
         "time_bucket": "afternoon",
+        "day_type": null,
         "counterparty_type": "business"
       },
       "consequent": {
@@ -118,12 +103,7 @@
         "action": "complete_purchase",
         "venue_pattern": "coffee shop"
       },
-      "statistics": {
-        "support": 4,
-        "co_occurrences": 2,
-        "confidence": 0.50,
-        "window_days": 90
-      },
+      "statistics": { "support": 4, "co_occurrences": 2, "confidence": 0.50, "window_days": 90 },
       "plain_english_template": "After a business lunch, this user has grabbed a coffee within the hour 50% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -135,6 +115,7 @@
         "action": "book_dining",
         "location_bucket": null,
         "time_bucket": "late_night",
+        "day_type": null,
         "counterparty_type": null
       },
       "consequent": {
@@ -142,12 +123,7 @@
         "action": "schedule_rideshare",
         "venue_pattern": null
       },
-      "statistics": {
-        "support": 5,
-        "co_occurrences": 4,
-        "confidence": 0.80,
-        "window_days": 90
-      },
+      "statistics": { "support": 5, "co_occurrences": 4, "confidence": 0.80, "window_days": 90 },
       "plain_english_template": "After late-night dining, this user has scheduled a rideshare home 80% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -159,6 +135,7 @@
         "action": "book_dining",
         "location_bucket": "Near Office",
         "time_bucket": "morning",
+        "day_type": "weekday",
         "counterparty_type": null
       },
       "consequent": {
@@ -166,12 +143,7 @@
         "action": "complete_purchase",
         "venue_pattern": "coffee shop"
       },
-      "statistics": {
-        "support": 5,
-        "co_occurrences": 2,
-        "confidence": 0.40,
-        "window_days": 90
-      },
+      "statistics": { "support": 5, "co_occurrences": 2, "confidence": 0.40, "window_days": 90 },
       "plain_english_template": null,
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -183,6 +155,7 @@
         "action": "book_dining",
         "location_bucket": null,
         "time_bucket": null,
+        "day_type": null,
         "counterparty_type": null
       },
       "consequent": {
@@ -190,12 +163,7 @@
         "action": "complete_purchase",
         "venue_pattern": "gelato"
       },
-      "statistics": {
-        "support": 3,
-        "co_occurrences": 1,
-        "confidence": 0.33,
-        "window_days": 90
-      },
+      "statistics": { "support": 3, "co_occurrences": 1, "confidence": 0.33, "window_days": 90 },
       "plain_english_template": null,
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -206,7 +174,8 @@
         "category": "travel",
         "action": "book_travel",
         "location_bucket": null,
-        "time_bucket": "weekend",
+        "time_bucket": null,
+        "day_type": "weekend",
         "counterparty_type": null
       },
       "consequent": {
@@ -214,12 +183,7 @@
         "action": "complete_purchase",
         "venue_pattern": "travel insurance"
       },
-      "statistics": {
-        "support": 5,
-        "co_occurrences": 3,
-        "confidence": 0.60,
-        "window_days": 90
-      },
+      "statistics": { "support": 5, "co_occurrences": 3, "confidence": 0.60, "window_days": 90 },
       "plain_english_template": "After booking a weekend trip, this user has purchased travel insurance 60% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     },
@@ -231,6 +195,7 @@
         "action": "purchase_event_ticket",
         "location_bucket": null,
         "time_bucket": "evening",
+        "day_type": null,
         "counterparty_type": null
       },
       "consequent": {
@@ -238,12 +203,7 @@
         "action": "book_dining",
         "venue_pattern": null
       },
-      "statistics": {
-        "support": 3,
-        "co_occurrences": 2,
-        "confidence": 0.67,
-        "window_days": 90
-      },
+      "statistics": { "support": 3, "co_occurrences": 2, "confidence": 0.67, "window_days": 90 },
       "plain_english_template": "After booking an evening concert or show, this user has made a dinner reservation the same evening 67% of the time over the last 90 days.",
       "last_computed": "2026-05-10T00:00:00Z"
     }

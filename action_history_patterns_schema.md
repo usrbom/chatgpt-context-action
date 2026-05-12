@@ -53,7 +53,13 @@ This file is the template. Fill in `action_history_patterns.json` with real patt
 - `afternoon`: 12:00–16:59
 - `evening`: 17:00–21:59
 - `late_night`: 22:00–05:59
-- `weekend`: Saturday or Sunday, any time
+
+**`day_type` definitions (optional field on antecedent):**
+- `weekday`: Monday–Friday only
+- `weekend`: Saturday or Sunday only
+- `null`: applies to any day of week
+
+Use `day_type` when a pattern is day-sensitive but the time alone is insufficient. For example, "weekend brunch" requires both `time_bucket: morning` AND `day_type: weekend` — without `day_type`, a Monday morning booking would incorrectly match.
 
 **`confidence`** — Always `co_occurrences / support`. Do not round up. A confidence of exactly 0.50 qualifies.
 
