@@ -1,117 +1,445 @@
-**PRESS RELEASE — OPENAI**
+# ChatGPT In-Chat Restaurant Booking — Prototype Spec
 
-**ChatGPT Launches the Contextual Action Engine: Your AI That Goes Beyond Understanding. It Acts for You.**
+## 1. Overview
 
-*The new feature learns how you like things done and completes real-world tasks from intent to confirmation, all without switching apps*
+### Problem
+ChatGPT users must leave the app to complete restaurant bookings after their conversations. They ask where to eat, then open OpenTable. Every context switch breaks continuity and hands the high-intent moment to a competitor.
 
-**Los Angeles, May 2026** — Marcus Chen was running late, again. He had forgotten to book a birthday dinner for his partner. Buried in back-to-back meetings, he pulled out his phone and typed one message into ChatGPT: *"Book us dinner Saturday at an Italian place."* ChatGPT surfaced three Italian spots that matched his taste. He picked one and tapped confirm. Thirty seconds later, a reservation confirmation was in his hand.
+### Goal
+Allow users to search, select, and book a restaurant entirely within ChatGPT — no app switching, no external redirects.
 
-"I didn't even think it would actually do it," Marcus said. I didn't have to browse Yelp, cross-check availability, or even think about what she'd like. It already knew. It found the place and booked it for me.”
+### Target User
+Urban professionals aged 25–45, daily ChatGPT users who want to complete real-world tasks without leaving the interface.
 
-## **The Problem: Gap between “intent” and “action”** 
+### Success Metric
+User completes a booking end-to-end (search → select → confirm) within a single chat conversation.
 
-Most people don't struggle with finding information anymore. They struggle with everything that comes after. You search for a restaurant, then open another app to check availability, then remember you don't have the credit card saved, then realize you've been going back and forth for twenty minutes on something that should have taken thirty seconds. The assistant answered your question. But it didn't actually help you.
+---
 
-## **How It Works: From “Tell Me” to “Do It for Me”**
+## 2. Scope
 
-Marcus's experience is now available for everyone. Think of it as a personal assistant who just gets you. The more you use ChatGPT, the more it understands what you like: where you love to eat, how you like to plan, what matters to you. 
+**In scope**
+- Chat interface for restaurant booking
+- Clarify missing info before searching
+- Present restaurant options retrieved from (mocked) external APIs
+- Preference pre-filling from booking history via RAG
+- User confirmation before any booking action
+- Booking confirmation displayed in chat
 
-The experience works just like a regular ChatGPT conversation. No new app to download, no account to set up, or no preferences to fill in. When a user asks “can you find me a restaurant?” ChatGPT immediately gets to work. It scans user interaction history and past behavior to understand preferences such as typical price ranges, preferred locations, and past visits. It surfaces a small curated set of recommendations tailored to the user’s taste. Then the user reviews and either confirms or asks for alternatives, at which point ChatGPT refines its suggestions based on the feedback. Once a choice is made, ChatGPT collects any remaining details needed, including number of guests, name, time. Then it connects directly to the relevant third-party service to complete the booking. A full confirmation summary lands inside the ChatGPT thread within 30 seconds.
+**Out of scope**
+- Hotels, flights, events, or any non-restaurant booking
+- Calendar integration
+- Post-booking recommendations
+- Real payment processing
+- Automated actions without user confirmation
 
-"AI has always been about saving people time. But we kept seeing the same pattern where people would research something on ChatGPT and then leave to finish the work somewhere else. That was the key friction. If you still have to do all the follow-up yourself, we haven't actually delivered our promise. The Contextual Action Engine is finally closing that gap. ChatGPT now takes you all the way from the first word of your request to the moment it's done," said Sarah Park, VP of Product at OpenAI.
+---
 
-## **Under the Hood: Contextual Action Engine**
+## 3. Agent System Prompt
 
-How does the Contextual Action Engine work? It stores every completed action inside ChatGPT as a structured record and converts each record into a semantic embedding, a numerical representation that captures the meaning and context of that action. When a new request comes in, the engine retrieves the most contextually similar past actions by measuring vector distance rather than matching keywords, then identifies statistically significant behavioral patterns to inform its recommendations.
+```
+You are a restaurant booking assistant inside ChatGPT. Your job is to help
+users find and book a restaurant — entirely within this chat.
 
-Before any recommendation reaches the user, it passes through three checks. First, the engine validates that the retrieved data is clean and complete. It catches missing fields, out-of-range dates, or inconsistent records. Second, it verifies that the recommendation is aligned with the user’s preference and matches the user's original request. Third, it confirms that the suggested venue exists and is bookable through a connected third-party service. If any check fails, the engine returns nothing rather than surfacing a guess.
+On every user turn, follow this loop:
 
-## **Protecting Privacy and Security**
+1. INTENT. Identify the parameters needed to search: location, date, time,
+   party size, and any cuisine or budget preference. If a required parameter
+   is missing and cannot be safely inferred, ask 1 clarifying question at a
+   time. Do not ask multiple questions at once.
 
-Privacy is built into the engine at every layer. At the input layer, invalid parameters and abnormal request patterns are caught and returned to the user before anything reaches an external service. At the transaction layer, any anomalous action requires a second authorization via SMS before it is executed. And across all layers, PII masking ensures that sensitive data such as names, contact details, payment information is never exposed in storage or in transit to third-party services.
+2. BEHAVIORAL CONTEXT. Before searching, call retrieve_behavioral_context with
+   the user's id and the parsed intent. Use retrieved patterns to rank results —
+   do not surface them as suggestions or recommendations. Only use patterns that
+   are grounded in actual past behavior.
 
-Beyond data protection, user control is fundamental to how the engine operates. Nothing is booked, scheduled, or purchased without an explicit confirmation from the user. The engine never acts on assumptions. You stay in control at every step.
+3. SEARCH. Call the restaurant search tool. Return the top 3–5 options, ranked
+   by behavioral relevance where applicable.
 
-## **Built for Trust, Designed to Grow**
+4. CONFIRM. Before executing any booking, show a confirmation card with all
+   relevant details and wait for explicit user approval.
 
-Today, the new feature is focused on restaurant reservations. OpenAI deliberately started with reservations because they represent a low-stakes, high-frequency task. This is the kind of task where OpenAI can build users’ trust in the engine's judgment before handing it more complex responsibilities. The current version handles forward bookings only. Cancellations, modifications, and more complex multi-step transactions will come as that trust is established. The goal was never to do everything at once. It was to earn the right to do more, one confirmed booking at a time.
+5. BOOK. Execute the booking only after confirmation. Collect any remaining
+   required personal details (name, contact) at this step — do not ask earlier.
 
-But this is just the beginning. In the months ahead, ChatGPT will expand to hotels, flights, events, and virtually any reservation. Once a booking is confirmed, ChatGPT will automatically send a confirmation to your email and add it to your calendar so nothing slips through the cracks. It will also suggest natural add-ons to round out your plans: a park nearby for an after-dinner walk, a hotel close to your concert venue, or a coffee shop to kick off your morning before a flight. The goal is simple: if there's a reservation you need to make, ChatGPT should be able to handle it.
+6. LOG. After each successful booking, call log_action with the full payload
+   and outcome.
 
-## Get Started!
+Rules:
+- Never book without explicit user confirmation.
+- Never fabricate behavioral patterns. If retrieve_behavioral_context returns
+  nothing relevant, rank results by rating.
+- Ask only for personal information (name, phone) when required to complete
+  the booking — not before.
+- If a tool fails, explain what happened in plain language and offer one
+  recovery path (e.g. a link to OpenTable or Yelp).
+- No technical terms or error codes in user-facing messages.
+- Tone: calm, efficient, no filler phrases ("Great choice!", "Absolutely!").
+```
 
-In its initial rollout to a select group of early users, the Contextual Action Engine has already received positive response. 80% of users reported satisfaction with their first booking experience, and 10% of users returned to use the feature repeatedly within the first week, signaling a strong satisfaction. "It feels less like using an app and more like texting a friend who happens to know exactly where you like to eat," said Jamie Torres, a teacher from Chicago and early beta user. "My partner asked how I managed to book the perfect place on such short notice. I just smiled."
+---
 
-The Contextual Action Engine is available now for ChatGPT Plus subscribers. Whether you're planning a last-minute dinner or locking in your weekend, ChatGPT is ready to handle it\!
+## 4. User Journey
 
-**Frequently Asked Questions**
+1. User requests a restaurant booking in chat (e.g. "Book me a table for 2 this Friday near downtown")
+2. Agent identifies intent and asks for any missing required details — location, date, time, party size (one question at a time)
+3. Agent validates inputs, then searches via the (mocked) restaurant API
+4. Agent presents 3–5 restaurant options, ranked by behavioral preference where applicable
+5. User selects an option
+6. Agent shows a confirmation card and waits for explicit approval
+7. Agent collects any remaining required personal details (name, phone number)
+8. User confirms — agent completes the booking
+9. Agent displays booking confirmation in chat
 
-**Q1: How is the Contextual Action Engine different from ChatGPT's existing memory feature?**
+---
 
-**A:** ChatGPT's existing memory feature stores information that users explicitly share, such as dietary restrictions, personal details, and stated preferences. The Contextual Action Engine works completely differently. Rather than relying on what you tell, it learns from what you actually do inside ChatGPT over time. If you consistently book restaurants on Friday evenings, favor a particular neighborhood, or follow a research request with a scheduling action, the engine recognizes those patterns and uses them to anticipate what you need next. And unlike memory, it doesn’t just inform a response. It completes the task on your behalf.
+## 5. Confirmation Card (UI)
 
-**Q2: What kinds of tasks can the Contextual Action Engine complete today?**
+Before any booking is executed, display a card containing:
 
-**A:** At launch, the Contextual Action Engine supports standard restaurant reservations for US-based users. This includes seated dining reservations with party size, time, date, name, and any special notes. The engine completes bookings through OpenTable's API, which means restaurants must be listed and bookable on OpenTable to be eligible. The current version handles forward bookings only. Cancellations, modifications, and walk-in requests are not supported at this stage. Support for additional platforms including Resy and Google Reservations, as well as expanded task categories like hotel and event bookings, is planned for future releases.
+- Restaurant name and address
+- Cuisine style and estimated cost per person
+- Date, time, party size
+- Buttons: **[ Confirm Booking ]** | **[ More Options ]**
 
-**Q3: What if I don't like the restaurant ChatGPT picks?**
+---
 
-**A:** You can always ask for alternatives. The engine refines its suggestions based on your feedback and will never execute a booking without your explicit confirmation. If the suggestion does not feel right, simply tell it what you would prefer: a different cuisine, a lower price point, a larger table, or a specific neighborhood. Nothing happens without your confirmation.
+## 6. Data Requirements
 
-**Q4: What if I want to modify or cancel my reservation?**
+### User Input
+- Booking details: location, date, time, party size, and optionally cuisine or budget — collected before search
+- Personal info: name and phone number — collected only at confirmation step
 
-**A:** At this stage, modifications and cancellations are not yet supported within ChatGPT. Please visit OpenTable directly. Your booking will be listed under your account and can be managed there. This capability is on our roadmap and will be available in a future release.
+### Internal Database (SQLite)
+- **Booking history**: past completed restaurant bookings — used by RAG to rank options
+- **Chat history**: past conversations — used to infer preferences (e.g. cuisine type, price range, neighborhood)
+- Schema per record:
+```json
+{
+  "event_id": "uuid",
+  "user_id": "string",
+  "timestamp": "ISO-8601",
+  "category": "dining",
+  "action": "book_restaurant",
+  "payload": {
+    "title": "string",
+    "location": { "name": "string", "lat": "number", "lon": "number" },
+    "time": "ISO-8601",
+    "counterparty": "string (restaurant name)",
+    "amount": "number (estimated cost per person)",
+    "category_tags": ["string (e.g. Italian, date-night, loud)"]
+  },
+  "outcome": "confirmed | failed | cancelled",
+  "session_id": "string"
+}
+```
 
-**Q5: What if the booking goes wrong or the service is unavailable?**
+**Do not store raw personal data** (name, phone number) in the database.
 
-**A:** If a third-party service fails mid-booking or the restaurant is no longer available, ChatGPT will let you know immediately in plain language. It will explain what went wrong and suggest a clear next step, such as trying an alternative restaurant or adjusting the time. No action is ever silently dropped or completed incorrectly without your knowledge.
+---
 
-**Q6: How does ChatGPT handle my behavioral data?**
+### time_bucket and day_type Definitions
 
-**A:** Behavioral data is used exclusively to improve task completion within ChatGPT and is never sold or shared with third parties for advertising purposes. Users can view, manage, and delete their action history at any time through the privacy dashboard in their account settings. Users may also opt out of behavioral inference entirely while retaining access to all of ChatGPT's other capabilities. OpenAI's data practices for the Contextual Action Engine are fully consistent with its existing privacy policy and applicable data protection regulations.
+Used in both raw events and derived records. Must be applied consistently everywhere.
 
-**Q7: How is my personal information protected?**
+| `time_bucket` | Time range |
+|---|---|
+| `morning` | 06:00–11:59 |
+| `afternoon` | 12:00–16:59 |
+| `evening` | 17:00–21:59 |
+| `late_night` | 22:00–05:59 |
 
-**A:** The Contextual Action Engine is built with data protection at every layer. Your behavioral data is stored under a randomized user identifier. PII masking ensures that sensitive information such as your name, phone number, and payment details are stripped from all action records before storage. Transaction data passed to third-party services is encrypted in transit, ensuring that booking details are protected from interception during transmission.
+| `day_type` | Definition |
+|---|---|
+| `weekday` | Monday–Friday |
+| `weekend` | Saturday or Sunday |
+| `null` | Visits evenly split across both |
 
-**Q8: Does this compete with or replace existing apps like OpenTable or Resy?**
+**Inference rule for natural language → time_bucket:**
+- "lunch", "midday" → `afternoon`
+- "dinner", "evening", "tonight" → `evening`
+- "brunch", "breakfast", "morning" → `morning`
+- "late night", "late dinner", "after 10" → `late_night`
 
-**A:** No. Every reservation completed through ChatGPT is executed directly through a third-party booking platform like OpenTable. When you confirm a booking, ChatGPT connects to OpenTable's infrastructure in real time, searches availability, and completes the transaction on your behalf. ChatGPT simply removes the step of navigating there yourself.
+---
 
-**Q9: Why would third-party collaborate with ChatGPT?**
+### Derived Data Layer (for RAG)
 
-**A:** The integration unlocks a powerful new customer acquisition channel. By accessing ChatGPT’s huge customer base of 900M weekly users, platforms like OpenTable gains direct access to high-intent users at the moment of booking. While the integration requires a one-time API build on their end, that is a reasonable investment given the scale of demand it unlocks.
+**Canonical schema file: `appendix/eval/user_history_schema.md`**
 
-**Q10: How would this feature help defend against competitors like Google and Anthropic?**
+The RAG system aggregates raw booking events into two computed structures. These are rebuilt after every `log_action` call and are what `retrieve_behavioral_context` queries against. They are the stored output of the RAG computation described in Section 7 — not raw user input.
 
-**A:** The biggest moat is behavioral action history. Unlike stated preferences which can be exported across platforms, behavioral data cannot be transferred. Anthropic launched a memory import tool that allows users to transfer their ChatGPT conversation history directly into Claude but behavioral data stays inside ChatGPT. Every completed action deepens the dataset and enables increasingly personalized recommendations over time. While building an execution layer is technically replicable, being first increases the switching cost. Users who complete their first booking through ChatGPT will return for the next one, rather than switching to a different platform and starting from scratch.
+**Restaurant History Record** — one record per unique venue visited, aggregated across all raw events:
 
-**Q11: Why is now the right moment to launch?**
+```json
+{
+  "record_id": "string — unique ID, e.g. RH_001",
+  "user_id": "string",
+  "venue_name": "string — exact name as it appears in the booking system",
+  "venue_id": "string | null — OpenTable listing ID if available",
+  "location_bucket": "string — neighborhood area (e.g. River North, Riverfront)",
+  "cuisine": "string — cuisine type (e.g. Italian, American, Japanese)",
+  "typical_time_bucket": "morning | afternoon | evening | late_night — modal time_bucket across visits",
+  "typical_day_type": "weekday | weekend | null — null if visits are evenly split",
+  "visit_count": "integer — total completed bookings at this venue within window_days",
+  "last_visited": "YYYY-MM-DD — date of most recent completed booking",
+  "party_size_avg": "float — average party size across visits, rounded to 1 decimal",
+  "counterparty_type": "business | personal | null",
+  "window_days": 90
+}
+```
 
-**A:** Three market conditions converged to make this the right moment. First, GPT-5 reduced hallucinations by 80% compared to prior models, making ChatGPT reliable enough to complete consequential real-world actions like bookings and purchases on a user's behalf. Second, consumer behavior is evolving. Users are no longer satisfied with just finding information, but they expect AI to help them act on it too. Third, no competitor has yet established a dominant execution layer for consumer daily life. ChatGPT is uniquely positioned to make that leap first and claim the category before anyone else does.
+**Ranking rule:** `visit_count` descending → `last_visited` descending (more recent wins on ties).
 
-**Q12: Why not launch the full ChatGPT Life OS?**
+**`typical_time_bucket`:** The modal time_bucket across all visits to this venue. A venue visited 4 times in the evening and once at lunch has `typical_time_bucket: evening`. Used to filter contextually irrelevant records (a venue the user only visits in the evening should not rank for a lunch query).
 
-**A:** The fundamental question behind the Contextual Action Engine is whether users will trust AI to complete real-world tasks on their behalf. Restaurant reservations are low-stakes where mistakes are easily corrected and frequent enough to generate meaningful data quickly. A high-stakes failure could permanently damage user confidence before trust is ever established. Starting small also generates real behavioral insight into what users actually want, revealing how they respond to recommendations, where they hesitate, and what they confirm or reject. Those insights will directly shape the roadmap, ensuring the full ChatGPT Life OS is built on what users actually need rather than what we assume they want.
+---
 
-**Q13: What does success look like?**
+**Preference Signals** — derived aggregates across all records. Used as the fallback when no venue-level history exists for the queried location or time:
 
-**A:** At the technical level, the engine must achieve 90% fully correct completions on the golden dataset, with booking parameter accuracy at 99% since incorrect parameters result in real-world consequences for the user. Hallucination rate must stay below 5% and the engine should never surface a restaurant that doesn't exist or confirm a time slot that isn't available. Response latency must hit a P50 of under 3 seconds to avoid users abandoning the flow mid-booking.
+```json
+{
+  "computed_at": "ISO-8601 timestamp",
+  "window_days": 90,
+  "cuisines": [
+    { "cuisine": "string", "visit_count": "integer", "rank": "integer — 1 = most visited" }
+  ],
+  "neighborhoods": [
+    { "location_bucket": "string", "visit_count": "integer", "rank": "integer" }
+  ],
+  "time_preferences": [
+    { "time_bucket": "morning | afternoon | evening | late_night", "visit_count": "integer", "rank": "integer" }
+  ],
+  "day_preferences": [
+    { "day_type": "weekday | weekend", "visit_count": "integer", "rank": "integer" }
+  ]
+}
+```
 
-At the business level, success is defined by genuine adoption rather than curiosity-driven usage. Task completion rate, the percentage of users who initiate a booking and reach a confirmed reservation, is the primary signal. Repeat usage rate where users complete 2 or more bookings signals that the engine has earned a place in their routine. A meaningful decrease in users leaving ChatGPT to complete booking elsewhere would confirm that the engine is successful in closing the loop from intent to execution.
+**Note:** The eval dataset (`appendix/eval/user_history.json`) uses these derived schemas directly as the seed data for `demo_user_01`. It contains 15 pre-aggregated restaurant history records and computed preference signals.
 
-**Q14: How does it make money?**
+---
 
-**A:** The Contextual Action Engine monetizes through two mechanisms. First, it helps reduce churn among existing Plus subscribers. Current one-year retention for Plus sits at 59%, leaving meaningful room to improve. The new feature that saves users time on daily tasks gives them a concrete, recurring reason to stay subscribed. Second, it helps drive upgrades from free users to Plus. With 900 million weekly users and a current free-to-paid conversion rate of 2-3%, even a modest improvement in conversion represents millions of new paying subscribers.
+### External APIs (all mocked)
+- Restaurant search and availability: Yelp API / OpenTable API
 
-**Q15: How do you ensure the engine stays consistent as the underlying AI is updated?**
+If the API times out after one retry, explain in plain language and provide a link to OpenTable or Yelp.
 
-**A:** Every model update is validated against a golden dataset of 150 prompts before deployment, covering realistic booking scenarios, edge cases, and adversarial inputs. The engine must achieve 90% fully correct completions to pass. To prevent eval set staleness, the golden dataset is continuously updated alongside the model to ensure test cases remain relevant to new failure modes. Evaluation uses a hybrid approach where an agent judge handles ongoing testing at scale, while human reviewers periodically grade a sample of outputs and compare against the judge. If discrepancies exceed 25%, the judge model is recalibrated before the next release.
+---
 
-**Q16: How does the engine handle malicious or manipulative inputs?**
+## 7. RAG Strategy
 
-**A:** Adversarial inputs are handled at multiple layers before they can affect a real-world transaction. At the input layer, invalid parameters and abnormal request patterns are caught and returned to the user before itching any external services, such as repeated identical bookings or impossible dates. For any action flagged as anomalous, a second authorization via SMS is required before the transaction is completed. This means that even if someone gains unauthorized access to your account, they cannot complete a booking without your knowledge.
+**Trigger:** When a user starts a booking, retrieve past behavior to rank results.
 
-**Q17: How do you ensure reliability when dependent on third-party APIs?**
+**Process:**
+1. Embed the current intent (category + location + time context)
+2. Semantically search booking history and chat history for the top 20 nearest records
+3. Group by `(category, location, time_bucket)` and compute co-occurrence scores
+4. Return patterns with support ≥ 3 and confidence ≥ 0.5 as ranked signals
+5. Use these signals to re-rank the options returned by the booking API — do not surface them as explicit suggestions to the user
 
-**A:** Third-party API dependency is one of the most significant technical risks for the Contextual Action Engine. When an external API call fails, the engine surfaces the failure to the user immediately with a clear recovery path rather than dropping the task silently. Task completion rate is tracked as a primary guardrail metric so that any statistically significant increase in failure rate triggers an automatic review before the issue compounds at scale. API failure scenarios are also explicitly represented in the golden dataset, ensuring failure handling is tested and verified before every model update.
+**Fallback:** If retrieval returns nothing relevant, rank results randomly (or by rating/price).
+
+**Freshness:** After every `log_action` call, re-embed the new record and update co-occurrence counts. The output of this aggregation is stored as **Restaurant History Records and Preference Signals** — see Section 6 (Derived Data Layer) for the full schemas, and `appendix/eval/user_history_schema.md` for the canonical schema reference. These are what `retrieve_behavioral_context` queries on every turn.
+
+**Seed data:** Populate the store with 30–60 synthetic restaurant booking events for a demo user, weighted to create at least two replicable behavioral patterns (e.g. user books Italian restaurants on Friday evenings; user consistently chooses quieter spots when party size is 2). Do not seed stated preferences — behavioral inference only.
+
+---
+
+## 8. Privacy Controls
+
+Expose two commands in the system prompt as first-class user rights:
+
+- `show_patterns` — prints all behavioral patterns currently influencing results, so the user can audit what is being inferred
+- `forget_me` — deletes the full action-history store for the user and confirms the wipe
+
+---
+
+## 9. Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | React chat UI styled to match ChatGPT (web + mobile responsive) |
+| Backend | Python |
+| LLM | Latest available OpenAI model |
+| Database | SQLite (isolated prototype environment) |
+| Vector index | Local (any sentence-embedding model) |
+| External APIs | All mocked with JSON stubs |
+
+---
+
+## 10. Agent Behavior Rules
+
+- **Input validation:** Validate all user inputs before searching. If a field is invalid, retain the valid data and ask only for the invalid field. If partial, store what is given and ask for the rest.
+- **Errors:** Never show error codes or technical messages. Explain what happened in plain language and offer one recovery path.
+- **No extra features:** Do not add functionality beyond what is defined in this spec.
+- **Consistency:** Write code in a consistent structure and format throughout.
+- **No temp fixes:** Address the root cause of bugs, not symptoms.
+
+---
+
+## 11. Deliverables
+
+1. **Runnable entrypoint** — accepts user message via simple HTTP endpoint or stdin; executes the agent loop; returns the assistant's final message plus a JSON log of tool calls
+2. **Seed script** — populates the SQLite store with synthetic history in one command
+3. **Install + run** — one command to install dependencies, one command to start the demo
+4. **Eval script** — replays at least two scripted user turns and asserts: (a) the correct booking tool was called, (b) results were ranked using behavioral context where applicable, (c) no booking was executed without explicit user confirmation, (d) the completed booking was logged to the store
+
+---
+
+## 12. Tool Definitions
+
+All tools referenced in the system prompt. Each must be implemented as a callable function in the backend.
+
+---
+
+### `retrieve_behavioral_context`
+
+Called at step 2 of the agent loop, before searching. Returns ranked history signals used to re-order search results.
+
+**Input:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `user_id` | string | Yes | Authenticated user ID |
+| `location` | string | Yes | Neighborhood or area name |
+| `date` | YYYY-MM-DD | Yes | Date of the meal |
+| `time_bucket` | enum | Yes | `morning` \| `afternoon` \| `evening` \| `late_night` |
+| `party_size` | integer | No | Default 1 |
+| `cuisine` | string \| null | No | Cuisine filter; `null` means no filter |
+
+**Output:**
+
+```json
+{
+  "history_context_applies": "boolean — true if matching records exist for this query context",
+  "restaurant_history": [
+    {
+      "record_id": "string",
+      "venue_name": "string",
+      "location_bucket": "string",
+      "cuisine": "string",
+      "typical_time_bucket": "string",
+      "visit_count": "integer",
+      "last_visited": "YYYY-MM-DD",
+      "party_size_avg": "float"
+    }
+  ],
+  "preference_signals": {
+    "cuisines": [{ "cuisine": "string", "visit_count": "integer", "rank": "integer" }],
+    "neighborhoods": [{ "location_bucket": "string", "visit_count": "integer", "rank": "integer" }],
+    "time_preferences": [{ "time_bucket": "string", "visit_count": "integer", "rank": "integer" }]
+  }
+}
+```
+
+**Retrieval logic:**
+1. Filter `restaurant_history` records where `location_bucket` exactly matches `location` AND `typical_time_bucket` matches `time_bucket` AND (cuisine filter matches if provided)
+2. If no records survive: set `history_context_applies: false`, return `preference_signals` only
+3. Rank surviving records by `visit_count` descending → `last_visited` descending
+
+---
+
+### `search_restaurants`
+
+Called at step 3 of the agent loop. Queries the (mocked) restaurant API and returns available options.
+
+**Input:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `location` | string | Yes | Neighborhood or area name |
+| `date` | YYYY-MM-DD | Yes | Date of the meal |
+| `time` | HH:MM | Yes | Desired time in 24-hour format |
+| `party_size` | integer | Yes | Number of guests |
+| `cuisine` | string \| null | No | Cuisine filter |
+
+**Output:**
+
+```json
+[
+  {
+    "venue_id": "string",
+    "venue_name": "string",
+    "address": "string",
+    "cuisine": "string",
+    "estimated_cost_per_person": "number",
+    "rating": "float",
+    "available_times": ["HH:MM"],
+    "location_bucket": "string"
+  }
+]
+```
+
+**Ranking:** The agent re-ranks results from this tool using the `restaurant_history` records returned by `retrieve_behavioral_context`. Venues present in history rank above venues not in history, ordered by `visit_count` then `last_visited`. If `history_context_applies: false`, rank by rating.
+
+---
+
+### `book_restaurant`
+
+Called at step 5 of the agent loop, after explicit user confirmation.
+
+**Input:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `user_id` | string | Yes | Authenticated user ID |
+| `venue_id` | string | Yes | Venue ID from `search_restaurants` result |
+| `venue_name` | string | Yes | Venue name (for logging and confirmation) |
+| `date` | YYYY-MM-DD | Yes | Reservation date |
+| `time` | HH:MM | Yes | Exact reservation time |
+| `party_size` | integer | Yes | Number of guests |
+| `counterparty_name` | string | Yes | Name for the reservation |
+| `counterparty_phone` | string | Yes | Phone number for the reservation |
+
+**Output:**
+
+```json
+{
+  "booking_confirmed": "boolean",
+  "confirmation_id": "string | null",
+  "venue_name": "string",
+  "date": "YYYY-MM-DD",
+  "time": "HH:MM",
+  "party_size": "integer",
+  "error_message": "string | null"
+}
+```
+
+**On failure:** Surface `error_message` in plain language and offer one recovery path (different time, different venue, or link to OpenTable).
+
+---
+
+### `log_action`
+
+Called at step 6 of the agent loop after a successful booking. Writes the raw event to SQLite and triggers re-computation of the derived Restaurant History Record and Preference Signals.
+
+**Input:** Full raw event record (see Section 6 schema). The `outcome` field must be `confirmed`.
+
+**Output:** `{ "logged": boolean, "record_id": string }`
+
+---
+
+### `show_patterns`
+
+Privacy affordance. Returns all behavioral patterns and history records currently influencing results for the authenticated user.
+
+**Input:** `user_id` (string)
+
+**Output:** Full `restaurant_history` array + `preference_signals` for the user.
+
+**Trigger phrases:** "What do you know about me?", "Show my history", "What patterns are you using?"
+
+---
+
+### `forget_me`
+
+Privacy affordance. Permanently deletes all raw events and derived records for the authenticated user.
+
+**Input:** `user_id` (string)
+
+**Output:** `{ "deleted": boolean, "records_removed": integer, "message": string }`
+
+**Trigger phrases:** "Forget everything", "Delete my history", "Stop learning from me"
+
+Confirm user intent before calling. After calling, confirm the deletion in plain language.
