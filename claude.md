@@ -3,6 +3,47 @@
 product taste, competitive research, and a creation framework to
 take any idea from concept to functional prototype.
 ---
+## Collaboration Workflow
+
+This section governs how all contributors — regardless of Git experience — should start and finish work on this repo. Claude Code enforces this flow automatically.
+
+### Session Start (run every time before touching any file)
+
+1. Pull the latest changes from master:
+   ```
+   git pull origin master
+   ```
+2. Create a development branch named `{git_username}_{feature_name}`, where:
+   - `git_username` = the name from `git config user.name`, lowercased, spaces replaced with underscores
+   - `feature_name` = a short description of what you are working on (e.g., `dining-prompts`, `eval-rubric`, `travel-prompts`)
+   - Example: `utkarsh_dining-prompts`
+3. Switch to that branch. All work happens here — never commit directly to master.
+
+### During Work
+
+Make changes normally. Claude Code will track all modified and new files on the dev branch.
+
+### Trigger: "done with changes"
+
+When the collaborator says **"done with changes"**, Claude Code will:
+
+1. Stage all modified and new files
+2. Commit with a short descriptive message summarising what changed
+3. Pull the latest from `origin/master` into the current branch to catch any conflicts before pushing
+4. Push the dev branch to remote
+5. Print the pull request URL so the collaborator can open it directly:
+   `https://github.com/usrbom/chatgpt-context-action/compare/{branch_name}?expand=1`
+
+Merging into master happens remotely via GitHub — Claude Code does not merge locally.
+
+### Rules
+
+- Never commit or push directly to master
+- Never skip the session-start pull — always get latest before creating your branch
+- Never skip the pre-push pull — always pull once more before pushing to reduce conflicts
+- One branch per working session; do not reuse old branches
+
+---
 ## Overview
 ### Problem
 Building products quickly and consistently is hard. Without a shared framework, each new idea restarts from scratch with no structured way to validate the problem, assess the market, or move from insight to something real. The result is either over-built MVPs that solved the wrong thing, or under-researched features that ignore what competitors and customers already know.
