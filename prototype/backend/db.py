@@ -15,6 +15,12 @@ def get_conn() -> sqlite3.Connection:
 def init_db() -> None:
     with get_conn() as conn:
         conn.executescript("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id TEXT PRIMARY KEY,
+                state_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS raw_events (
                 event_id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -229,6 +235,27 @@ def recompute_derived(user_id: str) -> None:
             "INSERT OR REPLACE INTO preference_signals (user_id, computed_at, window_days, data) VALUES (?, ?, ?, ?)",
             (user_id, signals["computed_at"], 90, json.dumps(signals)),
         )
+
+
+def save_session(session_id: str, state_json: str) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO sessions (session_id, state_json, updated_at) VALUES (?, ?, ?)",
+            (session_id, state_json, datetime.utcnow().isoformat()),
+        )
+
+
+def load_session(session_id: str) -> str | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT state_json FROM sessions WHERE session_id = ?", (session_id,)
+        ).fetchone()
+    return row["state_json"] if row else None
+
+
+def delete_session(session_id: str) -> None:
+    with get_conn() as conn:
+        conn.execute("DELETE FROM sessions WHERE session_id = ?", (session_id,))
 
 
 def delete_user_data(user_id: str) -> int:

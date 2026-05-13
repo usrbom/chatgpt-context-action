@@ -40,12 +40,7 @@ function TypingIndicator() {
 }
 
 export default function App() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "Hi! I can help you find and book a restaurant. Where are you looking to eat, and when?",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -60,12 +55,7 @@ export default function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: SESSION_ID }),
     });
-    setMessages([
-      {
-        role: "assistant",
-        content: "Hi! I can help you find and book a restaurant. Where are you looking to eat, and when?",
-      },
-    ]);
+    setMessages([]);
   };
 
   const sendMessage = async () => {
