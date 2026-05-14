@@ -372,6 +372,49 @@ def _answer_question(msg: str, state: dict) -> str:
     )
 
 
+_COVERED_NEIGHBORHOODS = [
+    "River North, West Loop, Lincoln Park (Chicago)",
+    "Santa Monica, Westwood, Beverly Hills, Venice Beach (LA)",
+    "West Village, SoHo, Midtown, Brooklyn (NYC)",
+    "Mission, North Beach, Hayes Valley (SF)",
+    "South Beach, Wynwood, Brickell (Miami)",
+]
+
+
+def _is_known_location(name: str) -> bool:
+    """True if name fuzzy-matches a location bucket in the mock API."""
+    from mock_api import _LOCATION_INDEX
+    loc_lower = name.lower()
+    return bool(_parse_location(name)) or any(
+        loc_lower in k or k in loc_lower for k in _LOCATION_INDEX.keys()
+    )
+
+
+def _extract_location_attempt(text: str) -> str | None:
+    """Return a candidate place name from 'in/at/near X' patterns if X is not a known neighborhood."""
+    m = re.search(
+        r'\b(?:in|at|near|around)\s+([A-Za-z][a-zA-Z ]{1,25}?)(?=\s+(?:for|on|this|next|tonight|today|tomorrow|a\s|\d)|[,.]|$)',
+        text.strip(),
+    )
+    if m:
+        candidate = m.group(1).strip().title()
+        if candidate and not _parse_location(candidate):
+            return candidate
+    return None
+
+
+def _unknown_location_response(location_name: str) -> dict:
+    return {
+        "response": (
+            f"I don't have restaurants listed in {location_name}. "
+            f"Here are neighborhoods I can search:\n\n"
+            + "\n".join(f"• {c}" for c in _COVERED_NEIGHBORHOODS)
+            + "\n\nWhich one works for you?"
+        ),
+        "tool_log": [],
+    }
+
+
 def _looks_like_location_attempt(text: str, current_recs: list) -> bool:
     """True when the user seems to be naming a place, even if it's not in NEIGHBORHOODS."""
     stripped = text.strip()
@@ -782,8 +825,16 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
 
         # ── Nothing matched — give a clear in-flow response ────
         if _looks_like_location_attempt(msg, recs):
-            state["params"]["location"] = msg.strip().title()
+            candidate = msg.strip().title()
+            if not _is_known_location(candidate):
+                return _unknown_location_response(candidate)
+            state["params"]["location"] = candidate
             return _do_recommendations(session_id, user_id, state, tool_log)
+
+        # Catch "at/in X" patterns where X is an unknown location
+        attempted = _extract_location_attempt(msg)
+        if attempted and not _is_known_location(attempted):
+            return _unknown_location_response(attempted)
 
         if any(w in msg_low for w in ["availab", "open", "slot", "time slot", "when can"]):
             return {
@@ -818,10 +869,12 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         if asking == "location":
             loc = _parse_location(msg)
             if not loc:
-                # Try treating the whole message as a location only if it looks like a place name
                 stripped = msg.strip()
                 if len(stripped) > 2 and not any(c in stripped for c in ["?", "!", "."]):
-                    loc = stripped.title()
+                    candidate = stripped.title()
+                    if not _is_known_location(candidate):
+                        return _unknown_location_response(candidate)
+                    loc = candidate
             if loc:
                 state["params"]["location"] = loc
             else:
@@ -878,6 +931,9 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         state["state"] = "CLARIFYING"
         state["asking_for"] = missing
         if missing == "location":
+            attempted = _extract_location_attempt(msg)
+            if attempted and not _is_known_location(attempted):
+                return _unknown_location_response(attempted)
             return {"response": "Which neighborhood are you looking in?", "tool_log": []}
         if missing == "date":
             return {"response": "What date would you like?", "tool_log": []}
@@ -908,22 +964,9 @@ def _do_recommendations(session_id: str, user_id: str, state: dict, tool_log: li
         state["state"] = "CLARIFYING"
         state["asking_for"] = "location"
         state["params"]["location"] = None
-        covered = [
-            "River North, West Loop, Lincoln Park (Chicago)",
-            "Santa Monica, Westwood, Beverly Hills, Venice Beach (LA)",
-            "West Village, SoHo, Midtown, Brooklyn (NYC)",
-            "Mission, North Beach, Hayes Valley (SF)",
-            "South Beach, Wynwood, Brickell (Miami)",
-        ]
-        return {
-            "response": (
-                f"I don't have restaurants listed in {location_tried}. "
-                f"Here are neighborhoods I can search:\n\n"
-                + "\n".join(f"• {c}" for c in covered)
-                + "\n\nWhich one works for you?"
-            ),
-            "tool_log": tool_log,
-        }
+        r = _unknown_location_response(location_tried)
+        r["tool_log"] = tool_log
+        return r
 
     try:
         date_fmt = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%A, %B %-d")

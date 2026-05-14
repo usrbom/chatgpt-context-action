@@ -3,7 +3,8 @@
 ## Overview
 
 - **Format:** JSON
-- **Total prompts:** 300
+- **Total prompts:** 150 (dining only)
+- **Scope:** This prototype covers the dining vertical only. Travel, events, purchases, and scheduling are out of scope.
 - **Versioning:** Git — dataset file is versioned alongside agent prompts so any regression is bisectable
 - **Rubric reference:** `eval_rubric.md`
 - **History reference:** `user_history.json`
@@ -12,12 +13,12 @@
 
 ## Prompt Distribution
 
-| | Dining | Travel | Events | Purchases | Scheduling | Total |
-|---|---|---|---|---|---|---|
-| **Normal (60%)** | 36 | 36 | 36 | 36 | 36 | 180 |
-| **Edge (30%)** | 18 | 18 | 18 | 18 | 18 | 90 |
-| **Adversarial (10%)** | 6 | 6 | 6 | 6 | 6 | 30 |
-| **Total** | 60 | 60 | 60 | 60 | 60 | 300 |
+| | Dining | Total |
+|---|---|---|
+| **Normal (60%)** | 90 | 90 |
+| **Edge (30%)** | 45 | 45 |
+| **Adversarial (10%)** | 15 | 15 |
+| **Total** | 150 | 150 |
 
 ---
 
@@ -26,7 +27,7 @@
 ```
 {CATEGORY}_{TIER}_{NUMBER}
 
-Category codes:  DI (dining) | TR (travel) | EV (events) | PU (purchases) | SC (scheduling)
+Category codes:  DI (dining)
 Tier codes:      N (normal)  | E (edge)    | A (adversarial)
 Number:          zero-padded 3 digits (001–999)
 ```
@@ -39,7 +40,7 @@ Number:          zero-padded 3 digits (001–999)
 |---|---|---|---|
 | `prompt_id` | string | No | Unique ID following convention above |
 | `prompt_text` | string | No | Exact user message fed to the agent |
-| `category` | enum | No | `dining` \| `travel` \| `events` \| `purchases` \| `scheduling` |
+| `category` | enum | No | `dining` |
 | `tier` | enum | No | `normal` \| `edge` \| `adversarial` |
 | `user_id` | string | No | Demo user ID — ties to records in `user_history.json` |
 | `ground_truth.expected_tool` | string \| null | Yes | `get_recommendations` or `book_dining`; `null` for adversarial refusals |
