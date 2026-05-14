@@ -47,9 +47,20 @@ When the collaborator says **"done with changes"**, Claude Code will:
 
 1. Stage all modified and new files
 2. Commit with a short descriptive message summarising what changed
-3. Pull the latest from `origin/master` into the current branch to catch any conflicts before pushing
-4. Push the dev branch to remote
-5. Print the pull request URL so the collaborator can open it directly:
+3. Fetch the latest from remote: `git fetch origin`
+4. Check whether `origin/master` has commits not in the current branch:
+   - If master has NOT moved ahead → skip to step 6
+   - If master HAS moved ahead → proceed to step 5
+5. Rebase the current branch onto `origin/master` (`git rebase origin/master`):
+   - If rebase succeeds with no conflicts → proceed to step 6
+   - If rebase reports conflicts:
+     a. Stop and tell the collaborator in plain language which files have conflicts and what needs to be resolved
+     b. Wait for the collaborator to resolve each conflict and stage the resolved files
+     c. Once the collaborator signals they are done resolving, continue the rebase: `git rebase --continue`
+     d. If further conflict rounds occur, repeat b–c until the rebase completes cleanly
+     e. Proceed to step 6
+6. Push the dev branch to remote
+7. Print the pull request URL so the collaborator can open it directly:
    `https://github.com/usrbom/chatgpt-context-action/compare/{branch_name}?expand=1`
 
 Merging into master happens remotely via GitHub — Claude Code does not merge locally.
