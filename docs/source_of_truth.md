@@ -222,6 +222,7 @@ The RAG system aggregates raw booking events into two computed structures. These
 
 ### External APIs (all mocked)
 - Restaurant search and availability: Yelp API / OpenTable API
+- Geographic scope: major US neighborhoods across Chicago, Los Angeles, New York, San Francisco, Miami, Washington DC, Boston, Seattle, and Austin. The mock dataset returns real venue names and addresses for each neighborhood.
 
 If the API times out after one retry, explain in plain language and provide a link to OpenTable or Yelp.
 
@@ -272,6 +273,7 @@ Expose two commands in the system prompt as first-class user rights:
 
 - **Input validation:** Validate all user inputs before searching. If a field is invalid, retain the valid data and ask only for the invalid field. If partial, store what is given and ask for the rest.
 - **Errors:** Never show error codes or technical messages. Explain what happened in plain language and offer one recovery path.
+- **No greeting on launch:** The chat interface starts blank. The user initiates the conversation. The agent does not send an opening message.
 - **No extra features:** Do not add functionality beyond what is defined in this spec.
 - **Consistency:** Write code in a consistent structure and format throughout.
 - **No temp fixes:** Address the root cause of bugs, not symptoms.

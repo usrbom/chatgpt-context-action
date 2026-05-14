@@ -14,28 +14,40 @@
 
 ## Interview Questions
 
-### Part 1 — Current behaviour (10 min)
+### Part 1 — Current behavior (10 min)
 
-1. Walk me through the last time you used an AI assistant to help you plan or book something. What happened?
-2. Where did the process break down, if anywhere?
-3. What apps or tools do you switch to after using ChatGPT? Why?
+1. Walk me through the last time you booked a restaurant reservation. How did you discover the place? What factors mattered when deciding? What steps did you take from start to finish?
+2. What apps, websites, or tools did you use during the process? What do you like or dislike about them?
+3. What was the most frustrating or difficult part of the process?
+4. How often does that happen?
+5. Have you found any workarounds or ways to make the process easier?
+6. How do you usually make restaurant decisions? (ex. spontaneous vs. planned, solo vs. group, special occasions vs. casual)
 
 ### Part 2 — Reaction to concept (10 min)
 
-_Show or describe the Contextual Action Engine concept — the agent that books a restaurant and proactively suggests a follow-on action based on past behaviour._
+_User will use the prototype_
 
-4. What is your first reaction to this?
-5. Does the proactive suggestion feel helpful or intrusive? What would make it feel more like the former?
-6. How would you feel knowing the agent is learning from your past actions inside the app?
+7. What is your first reaction to this? What do you think this function is trying to do?
+8. In what situations, if any, would you want something to handle the reservation process for you?
+9. Which part felt most valuable to you?
+10. What concerns or hesitations would you have about using this?
+11. How would you feel about the system learning from your past bookings or preferences over time?
+12. What felt accurate or inaccurate about the suggestions?
 
 ### Part 3 — Trust and control (5 min)
 
-7. What would you need to see to trust the agent to complete a booking on your behalf?
-8. Would you want the ability to see what patterns it has learned about you? To delete them?
+13. What would make you feel comfortable trusting the system to complete a booking on your behalf?
+14. Would you want visibility into what the system has learned about you?
+
+### Part 4 - Quantify
+
+15. On a scale of 0–10, how valuable does this feel to you?
+16. Why did you choose that score?
 
 ### Closing
 
-9. If this existed today, would you use it? What would have to be true for you to use it weekly?
+17. If this existed today, do you think you would use it?
+18. What would need to be true for you to use it regularly?
 
 ---
 
@@ -48,5 +60,3 @@ _Show or describe the Contextual Action Engine concept — the agent that books 
 Key quotes:
 
 Surprises:
-
-Patterns to note for eval:
