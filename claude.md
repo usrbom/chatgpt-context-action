@@ -21,6 +21,22 @@ When the collaborator says **"starting changes: {feature_name}"** (e.g., `starti
 
 All work happens on this branch — Claude Code will never commit directly to master.
 
+### Trigger: "resuming changes: {branch_name}"
+
+When the collaborator says **"resuming changes: {branch_name}"** (e.g., `resuming changes: utkarsh_singh_rawat_eval-refactor`), Claude Code will:
+
+1. Pull the latest changes from `origin/master`
+2. Fetch all remote branches: `git fetch origin`
+3. Check whether `{branch_name}` exists locally or remotely:
+   - If it does not exist anywhere → tell the collaborator the branch was not found, list the available dev branches (all branches that are not `master` or `main`), and stop
+   - If it exists locally or on remote → proceed to step 4
+4. Ask the collaborator: "Found branch `{branch_name}`. Do you want to work on this branch directly, or on a new copy of it?"
+   - **Same branch** → check it out (`git checkout {branch_name}`, or `git checkout -b {branch_name} origin/{branch_name}` if remote-only)
+   - **New copy** → create a new branch forked from `{branch_name}` named `{branch_name}_copy`; if that name is already taken, try `{branch_name}_copy_2`, `_copy_3`, etc. (check both locally and remotely before picking the name); switch to the new branch
+5. Confirm to the collaborator which branch they are now on and that they can continue making changes
+
+Use this trigger to continue work on a branch that was started in a previous session.
+
 ### During Work
 
 Make changes normally. Claude Code tracks all modified and new files on the dev branch.
@@ -43,7 +59,7 @@ Merging into master happens remotely via GitHub — Claude Code does not merge l
 - Never commit or push directly to master
 - Never skip the session-start pull — always get latest before creating your branch
 - Never skip the pre-push pull — always pull once more before pushing to reduce conflicts
-- One branch per working session; do not reuse old branches
+- Use `starting changes` for new work; use `resuming changes` to continue or copy an existing branch
 
 ---
 ## Overview
