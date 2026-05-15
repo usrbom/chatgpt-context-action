@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 import uuid
 from datetime import datetime
 
+import claude_search
 import db
 import mock_api
 
@@ -17,8 +20,8 @@ def get_recommendations(
     history_records = db.get_history(user_id, location, time_bucket, cuisine)
     history_context_applies = len(history_records) > 0
     preference_signals = db.get_preference_signals(user_id) or {}
+    history_names = [r["venue_name"] for r in history_records]
 
-    # Convert time_bucket to a representative time for the mock API search
     bucket_to_time = {
         "morning": "09:00",
         "afternoon": "13:00",
@@ -27,7 +30,12 @@ def get_recommendations(
     }
     search_time = bucket_to_time.get(time_bucket, "19:00")
 
-    search_results = mock_api.search_restaurants(location, date, search_time, party_size, cuisine)
+    search_results = claude_search.search_restaurants(
+        location, date, search_time, party_size, cuisine,
+        history_venue_names=history_names,
+    )
+    if not search_results:
+        search_results = mock_api.search_restaurants(location, date, search_time, party_size, cuisine)
 
     # Re-rank: venues in history first (by visit_count → last_visited), then rest by rating
     history_names = {r["venue_name"]: r for r in history_records}

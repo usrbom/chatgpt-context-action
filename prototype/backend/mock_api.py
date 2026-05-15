@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 
 # Restaurant stubs — major US neighborhoods across multiple cities
