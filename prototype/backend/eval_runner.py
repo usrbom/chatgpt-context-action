@@ -2,6 +2,8 @@
 Eval runner — dining prompts only (DI_N_*, DI_E_*, DI_A_*).
 Scores D1, D2, D4, D6. Writes results back to dataset.json.
 """
+from __future__ import annotations
+
 import json
 import sys
 from datetime import datetime

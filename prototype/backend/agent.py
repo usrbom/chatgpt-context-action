@@ -5,6 +5,8 @@ INITIAL → CLARIFYING → SELECTING → CONFIRMING → COLLECTING_NAME → COLL
 
 General chat: routed to `claude --print` using the existing Claude Code subscription.
 """
+from __future__ import annotations
+
 import json
 import re
 import subprocess
