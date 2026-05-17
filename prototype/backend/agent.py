@@ -148,6 +148,21 @@ def _parse_time_bucket(text: str) -> str:
     return "evening"
 
 
+_SOCIAL_PAIR = [
+    "my friend", "a friend", "my colleague", "my partner", "my date",
+    "my boyfriend", "my girlfriend", "my husband", "my wife",
+    "with sarah", "with a coworker",
+]
+
+
+def _is_social_pair(low: str) -> bool:
+    if any(s in low for s in _SOCIAL_PAIR):
+        return True
+    if re.search(r'\bme and\b|\band (i|me)\b', low):
+        return True
+    return False
+
+
 def _parse_party_size(text: str) -> int:
     low = text.lower()
     m = re.search(r'for\s+(\d+)|(\d+)\s*(?:people|guests?|person|of us)', low)
@@ -156,6 +171,8 @@ def _parse_party_size(text: str) -> int:
     for word, num in _NUMBER_WORDS.items():
         if re.search(rf'\bfor {word}\b|\b{word} (?:people|guests?|person)\b', low):
             return num
+    if _is_social_pair(low):
+        return 2
     return 1
 
 
@@ -177,6 +194,8 @@ def _parse_party_size_explicit(text: str) -> int | None:
     for word, num in _NUMBER_WORDS.items():
         if re.search(rf'\bfor {word}\b|\b{word} (?:people|guests?|person)\b', low):
             return num
+    if _is_social_pair(low):
+        return 2
     return None
 
 
@@ -342,6 +361,17 @@ def _answer_question(msg: str, state: dict) -> str:
     loc = params.get("location", "")
     if "why" in low and loc and loc.lower() in low:
         return f"You mentioned {loc} in your request. To search somewhere else, just name a different neighborhood."
+
+    # Why did the list change?
+    if "why" in low and any(w in low for w in ["change", "different", "switch", "update", "new"]):
+        params = state["params"]
+        loc = params.get("location", "this area")
+        ps = params.get("party_size", 2)
+        return (
+            f"The list refreshed because something in your search changed — I re-ran it for "
+            f"a party of {ps} in {loc}. The order is by rating. "
+            f"Pick a number to select, or tell me a different neighborhood, party size, or cuisine."
+        )
 
     # Why these restaurants / how is ranking done?
     if any(w in low for w in ["why these", "how did you pick", "how are these ranked",
@@ -781,19 +811,32 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             new_date     = _parse_date(msg)
             new_tb       = _parse_time_bucket_explicit(msg)
             params_changed = False
+            only_party_changed = True
             if new_party is not None and new_party != state["params"]["party_size"]:
                 state["params"]["party_size"] = new_party
                 params_changed = True
             if new_location and new_location != state["params"]["location"]:
                 state["params"]["location"] = new_location
                 params_changed = True
+                only_party_changed = False
             if new_date and new_date != state["params"]["date"]:
                 state["params"]["date"] = new_date
                 params_changed = True
+                only_party_changed = False
             if new_tb and new_tb != state["params"]["time_bucket"]:
                 state["params"]["time_bucket"] = new_tb
                 params_changed = True
+                only_party_changed = False
             if params_changed:
+                if only_party_changed and new_party is not None and state["recommendations"]:
+                    params = state["params"]
+                    try:
+                        date_fmt = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%A, %B %-d")
+                    except ValueError:
+                        date_fmt = params["date"]
+                    time_label = {"morning": "morning", "afternoon": "afternoon", "evening": "evening", "late_night": "late night"}.get(params["time_bucket"], params["time_bucket"])
+                    header = f"Got it — updated to party of {new_party}. Here are the same options for {date_fmt} {time_label}:\n\n"
+                    return {"response": header + _fmt_recommendations(state["recommendations"]) + "\n\nReply with a number or restaurant name to select.", "tool_log": []}
                 return _do_recommendations(session_id, user_id, state, tool_log)
             return {"response": _answer_question(msg, state), "tool_log": []}
 
@@ -852,23 +895,37 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         new_tb       = _parse_time_bucket_explicit(msg)
 
         params_changed = False
+        only_party_changed = True
         if new_location and new_location != state["params"]["location"]:
             state["params"]["location"] = new_location
             params_changed = True
+            only_party_changed = False
         if new_party is not None and new_party != state["params"]["party_size"]:
             state["params"]["party_size"] = new_party
             params_changed = True
         if new_cuisine and new_cuisine != state["params"]["cuisine"]:
             state["params"]["cuisine"] = new_cuisine
             params_changed = True
+            only_party_changed = False
         if new_date and new_date != state["params"]["date"]:
             state["params"]["date"] = new_date
             params_changed = True
+            only_party_changed = False
         if new_tb and new_tb != state["params"]["time_bucket"]:
             state["params"]["time_bucket"] = new_tb
             params_changed = True
+            only_party_changed = False
 
         if params_changed:
+            if only_party_changed and new_party is not None and state["recommendations"]:
+                params = state["params"]
+                try:
+                    date_fmt = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%A, %B %-d")
+                except ValueError:
+                    date_fmt = params["date"]
+                time_label = {"morning": "morning", "afternoon": "afternoon", "evening": "evening", "late_night": "late night"}.get(params["time_bucket"], params["time_bucket"])
+                header = f"Got it — updated to party of {new_party}. Here are the same options for {date_fmt} {time_label}:\n\n"
+                return {"response": header + _fmt_recommendations(state["recommendations"]) + "\n\nReply with a number or restaurant name to select.", "tool_log": []}
             return _do_recommendations(session_id, user_id, state, tool_log)
 
         # ── Nothing matched — give a clear in-flow response ────
@@ -967,6 +1024,15 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             answer = _answer_question(msg, state)
             if "choose from" not in answer and "change your search" not in answer:
                 return {"response": answer, "tool_log": []}
+        # Save any extractable params so they survive the next turn
+        _pre_date = _parse_date(msg)
+        _pre_tb = _parse_time_bucket_explicit(msg)
+        if _pre_date and not state["params"]["date"]:
+            state["params"]["date"] = _pre_date
+        if _pre_tb and not state["params"]["time_bucket"]:
+            state["params"]["time_bucket"] = _pre_tb
+        if state["params"]["party_size"] == 1 and _is_social_pair(msg_low):
+            state["params"]["party_size"] = 2
         return {"response": _handle_general_chat(msg), "tool_log": []}
 
     intent = _parse_intent(msg)
