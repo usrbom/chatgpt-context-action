@@ -3,12 +3,17 @@ from __future__ import annotations
 import json
 import logging
 import re
-import shutil
-import subprocess
 
 log = logging.getLogger(__name__)
 
-_CLAUDE_BIN = shutil.which("claude") or "/Users/utkarshrawat/.local/bin/claude"
+_client = None
+
+def _get_client():
+    global _client
+    if _client is None:
+        from openai import OpenAI
+        _client = OpenAI()  # reads OPENAI_API_KEY from environment
+    return _client
 
 _REQUIRED_FIELDS = {
     "venue_id", "venue_name", "address", "cuisine",
@@ -38,9 +43,9 @@ def search_restaurants(
     cuisine: str | None = None,
     history_venue_names: list[str] | None = None,
 ) -> list[dict]:
-    """Ask Claude for real restaurants. Returns same schema as mock_api, or [] on failure."""
+    """Ask OpenAI for real restaurants. Returns same schema as mock_api, or [] on failure."""
     prompt = _build_prompt(location, date, time, party_size, cuisine, history_venue_names or [])
-    raw = _call_claude(prompt)
+    raw = _call_openai(prompt)
     if raw is None:
         return []
     results = _parse(raw, location, time)
@@ -86,22 +91,17 @@ def _build_prompt(
     )
 
 
-def _call_claude(prompt: str) -> str | None:
+def _call_openai(prompt: str) -> str | None:
     try:
-        result = subprocess.run(
-            [_CLAUDE_BIN, "--print", prompt],
-            capture_output=True,
-            text=True,
-            timeout=60,
+        response = _get_client().chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1024,
+            timeout=30,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-        log.warning(
-            "claude_search: claude --print failed rc=%s stderr=%s",
-            result.returncode, result.stderr[:300],
-        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        log.warning("claude_search: subprocess error: %s", e)
+        log.warning("claude_search: OpenAI API error: %s", e)
     return None
 
 
@@ -120,7 +120,7 @@ def _to_float(val: object, default: float = 4.5) -> float:
 
 
 def _extract_json_array(raw: str) -> list | None:
-    # Try the whole response first (Claude sometimes outputs clean JSON)
+    # Try the whole response first
     stripped = raw.strip()
     try:
         parsed = json.loads(stripped)

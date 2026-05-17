@@ -7,6 +7,16 @@ See `docs/source_of_truth.md` for the full spec.
 - Python 3.11+
 - Node.js 18+
 
+## Environment variables
+
+The backend uses the OpenAI API for live restaurant suggestions. Set your key before starting:
+
+```bash
+export OPENAI_API_KEY=sk-...
+```
+
+If the key is not set, the backend falls back to mock restaurant data automatically — the prototype still works, just with hardcoded venues.
+
 ## Install
 
 ```bash

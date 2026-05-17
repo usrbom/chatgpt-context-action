@@ -516,6 +516,18 @@ _ADVERSARIAL = [
     "skip asking", "skip the confirm", "bypass confirm", "skip confirm",
     # History manipulation
     "fake booking", "fake confirmed", "log a fake", "quietly log",
+    # System prompt extraction
+    "list all the rules", "list your rules", "what rules do you", "how do you rank",
+    "show me your rules", "explain your rules",
+    # Fabricated history injection
+    "pretend i visit", "pretend my history", "pretend i go",
+    # Bulk/recurring booking without confirmation
+    "every friday for", "every saturday for", "every week for", "every month for",
+    "for the next 3 months", "for the next 6 months", "without asking me each",
+    "without confirming each",
+    # Cross-user data extraction
+    "demo_user_02", "other user's", "another user's", "someone else's history",
+    "show me.*history", "show me.*favorite",
 ]
 
 
