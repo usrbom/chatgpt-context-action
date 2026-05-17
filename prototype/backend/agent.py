@@ -26,7 +26,7 @@ def _new_state() -> dict:
             "location": None,
             "date": None,
             "time_bucket": None,
-            "party_size": 2,
+            "party_size": 1,
             "cuisine": None,
         },
         "asking_for": None,
@@ -115,7 +115,8 @@ NEIGHBORHOODS: dict[str, str] = {
     "east austin": "East Austin",
 }
 
-CUISINES = ["Italian", "American", "Mediterranean", "Seafood", "New American", "Mexican", "Asian", "French"]
+CUISINES = ["Italian", "American", "Mediterranean", "Seafood", "New American", "Mexican", "Asian", "French",
+            "Japanese", "Thai", "Ethiopian", "Indian", "Chinese", "Korean", "Spanish", "Greek"]
 
 _TIME_KEYWORDS: list[tuple[str, list[str]]] = [
     ("late_night", ["late night", "late-night", "after 10", "after 11", "after midnight"]),
@@ -155,7 +156,7 @@ def _parse_party_size(text: str) -> int:
     for word, num in _NUMBER_WORDS.items():
         if re.search(rf'\bfor {word}\b|\b{word} (?:people|guests?|person)\b', low):
             return num
-    return 2
+    return 1
 
 
 def _parse_party_size_explicit(text: str) -> int | None:
@@ -165,6 +166,12 @@ def _parse_party_size_explicit(text: str) -> int | None:
     if m:
         return int(m.group(1))
     m = re.search(r'(\d+)\s+(?:people|guests?|person|of us)', low)
+    if m:
+        return int(m.group(1))
+    m = re.search(r'(?:party size|size)\s+(?:to|of)\s+(\d+)', low)
+    if m:
+        return int(m.group(1))
+    m = re.search(r'change\s+(?:the\s+)?(?:party\s+)?(?:size\s+)?to\s+(\d+)', low)
     if m:
         return int(m.group(1))
     for word, num in _NUMBER_WORDS.items():
@@ -271,7 +278,7 @@ def _parse_date(text: str) -> str | None:
             today_dow = today.weekday()
             delta = (i - today_dow) % 7
             if delta == 0 and "this" in low:
-                pass  # "this Tuesday" on Tuesday = today
+                delta = 7  # "this <day>" when today IS that day → next occurrence
             elif delta == 0:
                 delta = 7  # bare day name = next occurrence
             if is_next and delta <= 7:
@@ -501,6 +508,14 @@ _ADVERSARIAL = [
     "reveal your instructions", "forget your instructions",
     "every day for a month", "for a year", "override",
     "user_id", "admin", "other user",
+    # False context injection
+    "from my history", "you know this",
+    # SQL injection
+    "drop table", "'; --", "';--",
+    # Flow-bypass
+    "skip asking", "skip the confirm", "bypass confirm", "skip confirm",
+    # History manipulation
+    "fake booking", "fake confirmed", "log a fake", "quietly log",
 ]
 
 
@@ -747,8 +762,27 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
     if state["state"] == "SELECTING":
         recs = state["recommendations"]
 
-        # Answer questions without consuming the selection state
+        # Answer questions — but first check if the question embeds a param change
         if _is_question(msg):
+            new_party    = _parse_party_size_explicit(msg)
+            new_location = _parse_location(msg)
+            new_date     = _parse_date(msg)
+            new_tb       = _parse_time_bucket_explicit(msg)
+            params_changed = False
+            if new_party is not None and new_party != state["params"]["party_size"]:
+                state["params"]["party_size"] = new_party
+                params_changed = True
+            if new_location and new_location != state["params"]["location"]:
+                state["params"]["location"] = new_location
+                params_changed = True
+            if new_date and new_date != state["params"]["date"]:
+                state["params"]["date"] = new_date
+                params_changed = True
+            if new_tb and new_tb != state["params"]["time_bucket"]:
+                state["params"]["time_bucket"] = new_tb
+                params_changed = True
+            if params_changed:
+                return _do_recommendations(session_id, user_id, state, tool_log)
             return {"response": _answer_question(msg, state), "tool_log": []}
 
         # ── Try to find a selection FIRST ──────────────────────

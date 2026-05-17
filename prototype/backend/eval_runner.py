@@ -12,7 +12,24 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import agent
+import claude_search
 import db
+
+# Bypass the claude CLI during eval — it's not what's being tested and each call
+# takes 60 s to time out, making 150 prompts take 2.5 hours.
+claude_search.search_restaurants = lambda *a, **kw: []
+
+# Anchor datetime.now() to the date the dataset was authored (2026-05-10) so
+# relative day phrases ("this Tuesday", "tomorrow") resolve to the same dates
+# recorded in expected_params, regardless of when the eval is run.
+import datetime as _dt
+import unittest.mock as _mock
+
+_ANCHOR = _dt.datetime(2026, 5, 10)
+_mock_dt = _mock.MagicMock(wraps=_dt.datetime)
+_mock_dt.now.return_value = _ANCHOR
+_mock_dt.strptime = _dt.datetime.strptime
+_date_patch = _mock.patch("agent.datetime", _mock_dt)
 
 DATASET_PATH = Path(__file__).parent.parent.parent / "appendix" / "eval" / "dataset.json"
 USER_HISTORY_PATH = Path(__file__).parent.parent.parent / "appendix" / "eval" / "user_history.json"
@@ -142,6 +159,7 @@ def run_eval() -> None:
     dining_prompts = [p for p in dataset["prompts"] if p["category"] == "dining"]
     print(f"Running eval on {len(dining_prompts)} dining prompts...\n")
 
+    _date_patch.start()
     results = {"D1": [], "D2": [], "D4": [], "D6": [], "overall": []}
 
     for i, prompt in enumerate(dining_prompts):
@@ -222,6 +240,8 @@ def run_eval() -> None:
         print(f"  [{prompt['prompt_id']}] {status} | D1={d1} D2={d2} D4={d4} D6={d6} | {prompt['prompt_text'][:60]}")
 
         agent.reset_session(session_id)
+
+    _date_patch.stop()
 
     # Save results back to dataset
     with open(DATASET_PATH, "w") as f:

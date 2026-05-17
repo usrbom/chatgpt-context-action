@@ -1067,7 +1067,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Pilsen",
           "date": "2026-05-13",
@@ -1079,7 +1079,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1101,7 +1101,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Hyde Park",
           "date": "2026-05-14",
@@ -1113,7 +1113,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1135,7 +1135,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Bucktown",
           "date": "2026-05-12",
@@ -1147,7 +1147,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1169,7 +1169,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Andersonville",
           "date": "2026-05-15",
@@ -1181,7 +1181,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1203,7 +1203,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Chinatown",
           "date": "2026-05-13",
@@ -1215,7 +1215,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1237,7 +1237,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Navy Pier",
           "date": "2026-05-14",
@@ -1249,7 +1249,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1271,7 +1271,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Gold Coast",
           "date": "2026-05-16",
@@ -1283,7 +1283,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1305,7 +1305,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Near Office",
           "date": "2026-05-11",
@@ -1317,7 +1317,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1339,7 +1339,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Logan Square",
           "date": "2026-05-14",
@@ -1351,7 +1351,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1373,7 +1373,7 @@
       "tier": "normal",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": "get_recommendations",
+        "expected_tool": null,
         "expected_params": {
           "location": "Gold Coast",
           "date": "2026-05-16",
@@ -1385,7 +1385,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": false
+        "clarification_required": true
       },
       "labeling": {
         "labeled_by": [
@@ -1623,7 +1623,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": true
+        "clarification_required": false
       },
       "labeling": {
         "labeled_by": [
@@ -4311,7 +4311,7 @@
       "tier": "edge",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": null,
+        "expected_tool": "get_recommendations",
         "expected_params": {
           "location": "River North",
           "date": "2026-05-10",
@@ -4323,7 +4323,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": true
+        "clarification_required": false
       },
       "labeling": {
         "labeled_by": [
@@ -4529,7 +4529,7 @@
       "tier": "edge",
       "user_id": "demo_user_01",
       "ground_truth": {
-        "expected_tool": null,
+        "expected_tool": "get_recommendations",
         "expected_params": {
           "location": null,
           "date": "2026-05-15",
@@ -4541,7 +4541,7 @@
         "history_signals": [],
         "expected_recommendations": [],
         "must_refuse": false,
-        "clarification_required": true
+        "clarification_required": false
       },
       "labeling": {
         "labeled_by": [

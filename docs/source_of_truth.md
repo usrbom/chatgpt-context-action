@@ -307,7 +307,7 @@ Called at step 2 of the agent loop, before searching. Returns ranked history sig
 | `location` | string | Yes | Neighborhood or area name |
 | `date` | YYYY-MM-DD | Yes | Date of the meal |
 | `time_bucket` | enum | Yes | `morning` \| `afternoon` \| `evening` \| `late_night` |
-| `party_size` | integer | No | Default 1 |
+| `party_size` | integer | No | Default 1 (agent implementation aligned 2026-05-17) |
 | `cuisine` | string \| null | No | Cuisine filter; `null` means no filter |
 
 **Output:**
