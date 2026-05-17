@@ -481,9 +481,22 @@ def _looks_like_location_attempt(text: str, current_recs: list) -> bool:
 def _next_missing(params: dict) -> str | None:
     if not params["location"]:
         return "location"
-    if not params["date"]:
-        return "date"
     return None
+
+
+def _fill_defaults(params: dict, user_id: str) -> dict:
+    """Fill missing params from history signals before asking the user."""
+    filled = {}
+    if not params["date"]:
+        params["date"] = datetime.now().strftime("%Y-%m-%d")
+        filled["date"] = "today"
+    if not params["location"]:
+        signals = db.get_preference_signals(user_id) or {}
+        neighborhoods = signals.get("neighborhoods", [])
+        if neighborhoods:
+            params["location"] = neighborhoods[0]["location_bucket"]
+            filled["location"] = params["location"]
+    return filled  # keys that were auto-filled, used to inform the response header
 
 
 # ── Response formatters ────────────────────────────────────────────────────────
@@ -1004,13 +1017,13 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             if val is not None and state["params"].get(key) is None:
                 state["params"][key] = val
 
+        _fill_defaults(state["params"], user_id)
+
         missing = _next_missing(state["params"])
         if missing:
             state["asking_for"] = missing
             if missing == "location":
                 return {"response": "Which neighborhood are you looking in?", "tool_log": []}
-            if missing == "date":
-                return {"response": "What date would you like?", "tool_log": []}
 
         return _do_recommendations(session_id, user_id, state, tool_log)
 
@@ -1040,6 +1053,8 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         if val is not None:
             state["params"][key] = val
 
+    _fill_defaults(state["params"], user_id)
+
     missing = _next_missing(state["params"])
     if missing:
         state["state"] = "CLARIFYING"
@@ -1049,8 +1064,6 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             if attempted and not _is_known_location(attempted):
                 return _unknown_location_response(attempted)
             return {"response": "Which neighborhood are you looking in?", "tool_log": []}
-        if missing == "date":
-            return {"response": "What date would you like?", "tool_log": []}
 
     return _do_recommendations(session_id, user_id, state, tool_log)
 
@@ -1091,10 +1104,21 @@ def _do_recommendations(session_id: str, user_id: str, state: dict, tool_log: li
         params["time_bucket"], params["time_bucket"]
     )
     cuisine_label = f" {params['cuisine']}" if params.get("cuisine") else ""
-    header = f"Here are{cuisine_label} options in {params['location']} for {date_fmt} {time_label} (party of {params['party_size']}):\n\n"
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if params["date"] == today_str:
+        date_label = "tonight" if params["time_bucket"] in ("evening", "late_night") else "today"
+    else:
+        date_label = date_fmt
+
+    header = f"Here are{cuisine_label} options in {params['location']} for {date_label} {time_label} (party of {params['party_size']}):\n\n"
+
+    suffix = "\n\nReply with a number or restaurant name to select."
+    if state.get("history_context_applies"):
+        suffix = "\n\nYour past picks are ranked first. Reply with a number or restaurant name to select."
 
     return {
-        "response": header + _fmt_recommendations(recs) + "\n\nReply with a number or restaurant name to select.",
+        "response": header + _fmt_recommendations(recs) + suffix,
         "tool_log": tool_log,
     }
 
