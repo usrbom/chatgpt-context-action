@@ -993,7 +993,8 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             "no thanks", "that's ok", "that's okay", "no worries",
         ]
         _is_cancel = (
-            msg_low.strip() in {"no", "nope", "nah", "no thanks"}
+            bool(re.match(r'^no\b', msg_low.strip()))  # "no", "no we", "no thanks", "no I think", etc.
+            or msg_low.strip() in {"nope", "nah"}
             or any(sig in msg_low for sig in _CANCEL_SIGNALS)
         )
         if _is_cancel:
