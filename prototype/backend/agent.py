@@ -954,16 +954,14 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
 
         # ── Nothing matched — give a clear in-flow response ────
         if _looks_like_location_attempt(msg, recs):
-            candidate = msg.strip().title()
-            if not _is_known_location(candidate):
-                return _unknown_location_response(candidate)
-            state["params"]["location"] = candidate
+            state["params"]["location"] = msg.strip().title()
             return _do_recommendations(session_id, user_id, state, tool_log)
 
-        # Catch "at/in X" patterns where X is an unknown location
+        # Catch "at/in X" patterns and pass through — let the search determine coverage
         attempted = _extract_location_attempt(msg)
-        if attempted and not _is_known_location(attempted):
-            return _unknown_location_response(attempted)
+        if attempted:
+            state["params"]["location"] = attempted
+            return _do_recommendations(session_id, user_id, state, tool_log)
 
         if any(w in msg_low for w in ["availab", "open", "slot", "time slot", "when can"]):
             return {
@@ -987,14 +985,10 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         # "what about X" / "how about X" — extract X and treat as a location answer
         _about_m = re.search(r'\b(?:what|how) about\b\s+(.+?)(?:\?|$)', msg_low)
         if _about_m:
-            _about_loc = _parse_location(_about_m.group(1).strip())
-            if _about_loc:
-                state["params"]["location"] = _about_loc
-                _fill_defaults(state["params"], user_id)
-                return _do_recommendations(session_id, user_id, state, tool_log)
-            _about_candidate = _about_m.group(1).strip().title()
-            if _about_candidate:
-                return _unknown_location_response(_about_candidate)
+            _about_raw = _about_m.group(1).strip()
+            state["params"]["location"] = _parse_location(_about_raw) or _about_raw.title()
+            _fill_defaults(state["params"], user_id)
+            return _do_recommendations(session_id, user_id, state, tool_log)
 
         # If the message is a question or clearly off-topic, answer it without demanding a param
         if _is_question(msg):
@@ -1021,10 +1015,7 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             loc = _parse_location(_clean)
             if not loc:
                 if len(_clean) > 2 and not any(c in _clean for c in ["?", "!", "."]):
-                    candidate = _clean.title()
-                    if not _is_known_location(candidate):
-                        return _unknown_location_response(candidate)
-                    loc = candidate
+                    loc = _clean.title()  # pass through; _do_recommendations handles empty results
             if loc:
                 state["params"]["location"] = loc
             else:
@@ -1097,8 +1088,10 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         state["asking_for"] = missing
         if missing == "location":
             attempted = _extract_location_attempt(msg)
-            if attempted and not _is_known_location(attempted):
-                return _unknown_location_response(attempted)
+            if attempted:
+                state["params"]["location"] = attempted
+                state["state"] = "INITIAL"
+                return _do_recommendations(session_id, user_id, state, tool_log)
             return {"response": "Which neighborhood are you looking in?", "tool_log": []}
 
     return _do_recommendations(session_id, user_id, state, tool_log)
@@ -1127,9 +1120,15 @@ def _do_recommendations(session_id: str, user_id: str, state: dict, tool_log: li
         state["state"] = "CLARIFYING"
         state["asking_for"] = "location"
         state["params"]["location"] = None
-        r = _unknown_location_response(location_tried)
-        r["tool_log"] = tool_log
-        return r
+        return {
+            "response": (
+                f"I couldn't find restaurants in {location_tried}. "
+                f"Here are neighborhoods I have good coverage for:\n\n"
+                + "\n".join(f"• {c}" for c in _COVERED_NEIGHBORHOODS)
+                + "\n\nWhich one works for you?"
+            ),
+            "tool_log": tool_log,
+        }
 
     try:
         date_fmt = datetime.strptime(params["date"], "%Y-%m-%d").strftime("%A, %B %-d")

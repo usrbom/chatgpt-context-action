@@ -30,8 +30,16 @@ def get_recommendations(
     }
     search_time = bucket_to_time.get(time_bucket, "19:00")
 
+    # When no cuisine specified and no location-specific history, infer from preference signals
+    # so the OpenAI query is shaped by the user's taste profile even for new cities
+    search_cuisine = cuisine
+    if not cuisine and not history_records:
+        top_cuisines = preference_signals.get("cuisines", [])
+        if top_cuisines:
+            search_cuisine = top_cuisines[0]["cuisine"]
+
     search_results = claude_search.search_restaurants(
-        location, date, search_time, party_size, cuisine,
+        location, date, search_time, party_size, search_cuisine,
         history_venue_names=history_names,
     )
     if not search_results:
