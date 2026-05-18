@@ -1,15 +1,14 @@
-"""Demo agent — scripted booking flow, Claude CLI for general chat.
+"""Demo agent — scripted booking flow, GPT-4o for general chat.
 
-Booking flow (state machine, no API key):
+Booking flow (state machine):
 INITIAL → CLARIFYING → SELECTING → CONFIRMING → COLLECTING_NAME → COLLECTING_PHONE → DONE
 
-General chat: routed to `claude --print` using the existing Claude Code subscription.
+General chat: routed to GPT-4o via the OpenAI API.
 """
 from __future__ import annotations
 
 import json
 import re
-import subprocess
 from datetime import datetime, timedelta
 
 import db
@@ -245,19 +244,23 @@ def _handle_general_chat(msg: str) -> str:
             time_hint = " for lunch"
         return f"Would you like me to find a restaurant{time_hint}? Just tell me the neighborhood and I'll pull up options."
 
-    # Call Claude CLI for everything else
-    prompt = f"{_GENERAL_CHAT_SYSTEM}\n\nUser: {msg}"
+    # Call GPT-4o for general chat
     try:
-        result = subprocess.run(
-            ["claude", "--print", prompt],
-            capture_output=True, text=True, timeout=30
+        from openai import OpenAI
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": _GENERAL_CHAT_SYSTEM},
+                {"role": "user", "content": msg},
+            ],
+            max_tokens=150,
+            timeout=30,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+        return response.choices[0].message.content.strip()
     except Exception:
         pass
 
-    # Fallback if CLI unavailable
     return "I can help you find and book a restaurant. Just tell me where and when."
 
 
@@ -982,6 +985,22 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
 
     # ── CLARIFYING ─────────────────────────────────────────────
     if state["state"] == "CLARIFYING":
+        # Detect cancellation / change of mind — reset flow and respond naturally
+        _CANCEL_SIGNALS = [
+            "never mind", "nevermind", "nvm", "forget it", "forget about it",
+            "don't worry", "changed my mind", "on second thought", "actually no",
+            "not anymore", "we'll just", "i'll just", "we're just", "i'm just",
+            "no thanks", "that's ok", "that's okay", "no worries",
+        ]
+        _is_cancel = (
+            msg_low.strip() in {"no", "nope", "nah", "no thanks"}
+            or any(sig in msg_low for sig in _CANCEL_SIGNALS)
+        )
+        if _is_cancel:
+            state["state"] = "INITIAL"
+            state["asking_for"] = None
+            return {"response": _handle_general_chat(msg), "tool_log": []}
+
         # "what about X" / "how about X" — extract X and treat as a location answer
         _about_m = re.search(r'\b(?:what|how) about\b\s+(.+?)(?:\?|$)', msg_low)
         if _about_m:
