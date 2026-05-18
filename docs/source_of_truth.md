@@ -267,11 +267,21 @@ Expose two commands in the system prompt as first-class user rights:
 | Layer | Choice |
 |---|---|
 | Frontend | React chat UI styled to match ChatGPT (web + mobile responsive) |
-| Backend | Python |
-| LLM | Latest available OpenAI model |
+| Backend | Python (FastAPI, port 8000) |
 | Database | SQLite (isolated prototype environment) |
 | Vector index | Local (any sentence-embedding model) |
-| External APIs | All mocked with JSON stubs |
+
+### LLM Roles
+
+| Role | Model | API | When used |
+|---|---|---|---|
+| Restaurant search | GPT-4o (`gpt-4o`) | OpenAI API | Every search turn — finds real restaurants for any US location, personalized by inferred cuisine from preference signals when no local history exists |
+| General chat | Claude (via Claude Code CLI) | Subprocess | Non-booking messages that don't match reservation intent |
+| Eval judging | Claude Sonnet 4.6 (`claude-sonnet-4-6`) | Anthropic API | Offline eval runs only — scores D1, D2, D3, D4, D6 per prompt; falls back to string-match if API unavailable |
+
+**Keys required:**
+- `OPENAI_API_KEY` — set in `prototype/backend/.env` to enable live restaurant search
+- `ANTHROPIC_API_KEY` — set in `prototype/backend/.env` to enable Claude LLM judge in eval runs
 
 ---
 
