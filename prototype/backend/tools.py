@@ -16,6 +16,10 @@ def get_recommendations(
     time_bucket: str,
     party_size: int,
     cuisine: str | None = None,
+    price_min: int | None = None,
+    price_max: int | None = None,
+    style_hint: str | None = None,
+    exclude_venue_names: list[str] | None = None,
 ) -> dict:
     history_records = db.get_history(user_id, location, time_bucket, cuisine)
     history_context_applies = len(history_records) > 0
@@ -30,12 +34,31 @@ def get_recommendations(
     }
     search_time = bucket_to_time.get(time_bucket, "19:00")
 
+    # When no cuisine specified and no location-specific history, infer from preference signals
+    # so the OpenAI query is shaped by the user's taste profile even for new cities
+    search_cuisine = cuisine
+    if not cuisine and not history_records:
+        top_cuisines = preference_signals.get("cuisines", [])
+        if top_cuisines:
+            search_cuisine = top_cuisines[0]["cuisine"]
+
     search_results = claude_search.search_restaurants(
-        location, date, search_time, party_size, cuisine,
+        location, date, search_time, party_size, search_cuisine,
         history_venue_names=history_names,
+        exclude_venue_names=exclude_venue_names or [],
+        price_min=price_min,
+        price_max=price_max,
+        style_hint=style_hint,
     )
     if not search_results:
         search_results = mock_api.search_restaurants(location, date, search_time, party_size, cuisine)
+    if exclude_venue_names:
+        exclude_set = set(exclude_venue_names)
+        search_results = [r for r in search_results if r["venue_name"] not in exclude_set]
+    if price_min is not None:
+        search_results = [r for r in search_results if r["estimated_cost_per_person"] >= price_min]
+    if price_max is not None:
+        search_results = [r for r in search_results if r["estimated_cost_per_person"] <= price_max]
 
     # Re-rank: venues in history first (by visit_count → last_visited), then rest by rating
     history_names = {r["venue_name"]: r for r in history_records}
@@ -88,6 +111,7 @@ def book_dining(
     result = mock_api.book_restaurant(venue_id, venue_name, date, time, party_size, counterparty_name, counterparty_phone)
 
     if result["booking_confirmed"]:
+        db.save_contact(user_id, counterparty_name, counterparty_phone)
         venue = mock_api.get_venue_by_id(venue_id)
         event = {
             "event_id": str(uuid.uuid4()),

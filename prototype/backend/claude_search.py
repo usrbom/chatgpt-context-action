@@ -3,12 +3,17 @@ from __future__ import annotations
 import json
 import logging
 import re
-import shutil
-import subprocess
 
 log = logging.getLogger(__name__)
 
-_CLAUDE_BIN = shutil.which("claude") or "/Users/utkarshrawat/.local/bin/claude"
+_client = None
+
+def _get_client():
+    global _client
+    if _client is None:
+        from openai import OpenAI
+        _client = OpenAI()  # reads OPENAI_API_KEY from environment
+    return _client
 
 _REQUIRED_FIELDS = {
     "venue_id", "venue_name", "address", "cuisine",
@@ -37,10 +42,14 @@ def search_restaurants(
     party_size: int,
     cuisine: str | None = None,
     history_venue_names: list[str] | None = None,
+    exclude_venue_names: list[str] | None = None,
+    price_min: int | None = None,
+    price_max: int | None = None,
+    style_hint: str | None = None,
 ) -> list[dict]:
-    """Ask Claude for real restaurants. Returns same schema as mock_api, or [] on failure."""
-    prompt = _build_prompt(location, date, time, party_size, cuisine, history_venue_names or [])
-    raw = _call_claude(prompt)
+    """Ask OpenAI for real restaurants. Returns same schema as mock_api, or [] on failure."""
+    prompt = _build_prompt(location, date, time, party_size, cuisine, history_venue_names or [], exclude_venue_names or [], price_min, price_max, style_hint)
+    raw = _call_openai(prompt)
     if raw is None:
         return []
     results = _parse(raw, location, time)
@@ -56,9 +65,23 @@ def _build_prompt(
     party_size: int,
     cuisine: str | None,
     history_names: list[str],
+    exclude_names: list[str],
+    price_min: int | None = None,
+    price_max: int | None = None,
+    style_hint: str | None = None,
 ) -> str:
     time_label = _TIME_LABELS.get(time, "dinner")
     cuisine_clause = f" serving {cuisine} cuisine" if cuisine else ""
+    style_clause = f" ({style_hint})" if style_hint else ""
+
+    if price_min and price_max:
+        price_clause = f" in the ${price_min}–${price_max}/person price range"
+    elif price_min:
+        price_clause = f" costing over ${price_min}/person"
+    elif price_max:
+        price_clause = f" costing under ${price_max}/person"
+    else:
+        price_clause = ""
 
     history_clause = ""
     if history_names:
@@ -68,11 +91,16 @@ def _build_prompt(
             f"include them by their exact name: {names_str}"
         )
 
+    exclude_clause = ""
+    if exclude_names:
+        names_str = ", ".join(f'"{n}"' for n in exclude_names)
+        exclude_clause = f"\n\nDo NOT include any of these restaurants: {names_str}"
+
     slots_example = json.dumps(_TIME_SLOT_DEFAULTS.get(time, ["18:00", "19:00", "20:00"]))
 
     return (
         f"Return a JSON array of 5 to 8 real restaurants in {location} "
-        f"suitable for {time_label} for a party of {party_size}{cuisine_clause}.{history_clause}\n\n"
+        f"suitable for {time_label} for a party of {party_size}{cuisine_clause}{style_clause}{price_clause}.{history_clause}{exclude_clause}\n\n"
         f"Each object must have exactly these fields:\n"
         f'  "venue_id": a short unique slug (e.g. "vn_abc123"),\n'
         f'  "venue_name": exact restaurant name,\n'
@@ -81,27 +109,24 @@ def _build_prompt(
         f'  "estimated_cost_per_person": integer USD with no dollar sign (e.g. 55),\n'
         f'  "rating": float between 4.0 and 5.0 (e.g. 4.7),\n'
         f'  "available_times": JSON array of HH:MM strings like {slots_example},\n'
-        f'  "location_bucket": "{location}"\n\n'
+        f'  "location_bucket": "{location}",\n'
+        f'  "description": one short sentence (10-18 words) on vibe / what makes it notable,\n'
+        f'  "popular_items": JSON array of 2-3 signature menu items (e.g. ["Truffle Pizza", "Burrata"])\n\n'
         f"Return ONLY the raw JSON array. No explanation, no markdown, no code fences, no trailing text."
     )
 
 
-def _call_claude(prompt: str) -> str | None:
+def _call_openai(prompt: str) -> str | None:
     try:
-        result = subprocess.run(
-            [_CLAUDE_BIN, "--print", prompt],
-            capture_output=True,
-            text=True,
-            timeout=60,
+        response = _get_client().chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1024,
+            timeout=30,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-        log.warning(
-            "claude_search: claude --print failed rc=%s stderr=%s",
-            result.returncode, result.stderr[:300],
-        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        log.warning("claude_search: subprocess error: %s", e)
+        log.warning("claude_search: OpenAI API error: %s", e)
     return None
 
 
@@ -120,7 +145,7 @@ def _to_float(val: object, default: float = 4.5) -> float:
 
 
 def _extract_json_array(raw: str) -> list | None:
-    # Try the whole response first (Claude sometimes outputs clean JSON)
+    # Try the whole response first
     stripped = raw.strip()
     try:
         parsed = json.loads(stripped)
@@ -176,6 +201,9 @@ def _parse(raw: str, location: str, time: str) -> list[dict]:
         if not isinstance(item.get("available_times"), list) or not item["available_times"]:
             item["available_times"] = default_slots
         item["location_bucket"] = location
+        item.setdefault("description", "")
+        if not isinstance(item.get("popular_items"), list):
+            item["popular_items"] = []
         valid.append(item)
 
     return valid

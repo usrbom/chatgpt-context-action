@@ -2,16 +2,25 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "data.db"
 
 
-def get_conn() -> sqlite3.Connection:
+@contextmanager
+def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def init_db() -> None:
@@ -57,7 +66,32 @@ def init_db() -> None:
                 window_days INTEGER NOT NULL DEFAULT 90,
                 data TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS saved_contacts (
+                user_id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
         """)
+
+
+def save_contact(user_id: str, name: str, phone: str) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """INSERT INTO saved_contacts (user_id, name, phone, updated_at)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, phone=excluded.phone, updated_at=excluded.updated_at""",
+            (user_id, name, phone, datetime.utcnow().isoformat() + "Z"),
+        )
+
+
+def get_contact(user_id: str) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT name, phone FROM saved_contacts WHERE user_id = ?", (user_id,)
+        ).fetchone()
+    return dict(row) if row else None
 
 
 def get_history(user_id: str, location: str, time_bucket: str, cuisine: str | None) -> list[dict]:
