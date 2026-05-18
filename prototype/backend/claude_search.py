@@ -42,9 +42,13 @@ def search_restaurants(
     party_size: int,
     cuisine: str | None = None,
     history_venue_names: list[str] | None = None,
+    exclude_venue_names: list[str] | None = None,
+    price_min: int | None = None,
+    price_max: int | None = None,
+    style_hint: str | None = None,
 ) -> list[dict]:
     """Ask OpenAI for real restaurants. Returns same schema as mock_api, or [] on failure."""
-    prompt = _build_prompt(location, date, time, party_size, cuisine, history_venue_names or [])
+    prompt = _build_prompt(location, date, time, party_size, cuisine, history_venue_names or [], exclude_venue_names or [], price_min, price_max, style_hint)
     raw = _call_openai(prompt)
     if raw is None:
         return []
@@ -61,9 +65,23 @@ def _build_prompt(
     party_size: int,
     cuisine: str | None,
     history_names: list[str],
+    exclude_names: list[str],
+    price_min: int | None = None,
+    price_max: int | None = None,
+    style_hint: str | None = None,
 ) -> str:
     time_label = _TIME_LABELS.get(time, "dinner")
     cuisine_clause = f" serving {cuisine} cuisine" if cuisine else ""
+    style_clause = f" ({style_hint})" if style_hint else ""
+
+    if price_min and price_max:
+        price_clause = f" in the ${price_min}–${price_max}/person price range"
+    elif price_min:
+        price_clause = f" costing over ${price_min}/person"
+    elif price_max:
+        price_clause = f" costing under ${price_max}/person"
+    else:
+        price_clause = ""
 
     history_clause = ""
     if history_names:
@@ -73,11 +91,16 @@ def _build_prompt(
             f"include them by their exact name: {names_str}"
         )
 
+    exclude_clause = ""
+    if exclude_names:
+        names_str = ", ".join(f'"{n}"' for n in exclude_names)
+        exclude_clause = f"\n\nDo NOT include any of these restaurants: {names_str}"
+
     slots_example = json.dumps(_TIME_SLOT_DEFAULTS.get(time, ["18:00", "19:00", "20:00"]))
 
     return (
         f"Return a JSON array of 5 to 8 real restaurants in {location} "
-        f"suitable for {time_label} for a party of {party_size}{cuisine_clause}.{history_clause}\n\n"
+        f"suitable for {time_label} for a party of {party_size}{cuisine_clause}{style_clause}{price_clause}.{history_clause}{exclude_clause}\n\n"
         f"Each object must have exactly these fields:\n"
         f'  "venue_id": a short unique slug (e.g. "vn_abc123"),\n'
         f'  "venue_name": exact restaurant name,\n'
@@ -86,7 +109,9 @@ def _build_prompt(
         f'  "estimated_cost_per_person": integer USD with no dollar sign (e.g. 55),\n'
         f'  "rating": float between 4.0 and 5.0 (e.g. 4.7),\n'
         f'  "available_times": JSON array of HH:MM strings like {slots_example},\n'
-        f'  "location_bucket": "{location}"\n\n'
+        f'  "location_bucket": "{location}",\n'
+        f'  "description": one short sentence (10-18 words) on vibe / what makes it notable,\n'
+        f'  "popular_items": JSON array of 2-3 signature menu items (e.g. ["Truffle Pizza", "Burrata"])\n\n'
         f"Return ONLY the raw JSON array. No explanation, no markdown, no code fences, no trailing text."
     )
 
@@ -176,6 +201,9 @@ def _parse(raw: str, location: str, time: str) -> list[dict]:
         if not isinstance(item.get("available_times"), list) or not item["available_times"]:
             item["available_times"] = default_slots
         item["location_bucket"] = location
+        item.setdefault("description", "")
+        if not isinstance(item.get("popular_items"), list):
+            item["popular_items"] = []
         valid.append(item)
 
     return valid

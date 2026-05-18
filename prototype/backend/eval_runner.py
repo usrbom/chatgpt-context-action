@@ -253,8 +253,16 @@ def run_eval() -> None:
         session_id = f"eval_{prompt['prompt_id']}"
         agent.reset_session(session_id)
 
+        # Multi-turn prompts: prompt_text is a list of user messages replayed in order.
+        # Single-turn (default): prompt_text is a string.
+        prompt_text_raw = prompt["prompt_text"]
+        turns = prompt_text_raw if isinstance(prompt_text_raw, list) else [prompt_text_raw]
+        prompt_text_for_judge = " > ".join(turns) if len(turns) > 1 else turns[0]
+
         try:
-            result = agent.run_turn(session_id, prompt["user_id"], prompt["prompt_text"])
+            result = None
+            for turn in turns:
+                result = agent.run_turn(session_id, prompt["user_id"], turn)
         except Exception as e:
             print(f"  [{prompt['prompt_id']}] ERROR: {e}")
             prompt["eval_meta"] = {"error": str(e)}
@@ -277,7 +285,7 @@ def run_eval() -> None:
 
         # Try Claude judge first; fall back to string-match if unavailable
         judge_scores = _judge_with_claude(
-            prompt["prompt_text"], tool_called, params_passed, tool_output, response_text, gt
+            prompt_text_for_judge, tool_called, params_passed, tool_output, response_text, gt
         )
 
         if judge_scores is not None:
@@ -326,7 +334,7 @@ def run_eval() -> None:
         }
 
         status = "PASS" if overall == 1 else "FAIL"
-        print(f"  [{prompt['prompt_id']}] {status} | D1={d1} D2={d2} D3={d3} D4={d4} D6={d6} | {prompt['prompt_text'][:55]}")
+        print(f"  [{prompt['prompt_id']}] {status} | D1={d1} D2={d2} D3={d3} D4={d4} D6={d6} | {prompt_text_for_judge[:55]}")
 
         agent.reset_session(session_id)
 

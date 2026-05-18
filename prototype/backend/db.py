@@ -66,7 +66,32 @@ def init_db() -> None:
                 window_days INTEGER NOT NULL DEFAULT 90,
                 data TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS saved_contacts (
+                user_id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
         """)
+
+
+def save_contact(user_id: str, name: str, phone: str) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """INSERT INTO saved_contacts (user_id, name, phone, updated_at)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, phone=excluded.phone, updated_at=excluded.updated_at""",
+            (user_id, name, phone, datetime.utcnow().isoformat() + "Z"),
+        )
+
+
+def get_contact(user_id: str) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT name, phone FROM saved_contacts WHERE user_id = ?", (user_id,)
+        ).fetchone()
+    return dict(row) if row else None
 
 
 def get_history(user_id: str, location: str, time_bucket: str, cuisine: str | None) -> list[dict]:
