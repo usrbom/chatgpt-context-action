@@ -20,8 +20,9 @@ User completes a booking end-to-end (search → select → confirm) within a sin
 
 **In scope**
 - Chat interface for restaurant booking
-- Clarify missing info before searching
-- Present restaurant options retrieved from (mocked) external APIs
+- Clarify missing info before searching; smart defaults reduce questions asked
+- Present restaurant options retrieved from OpenAI (live) or mock data (fallback)
+- Any US city or neighborhood — OpenAI handles locations not in mock data
 - Preference pre-filling from booking history via RAG
 - User confirmation before any booking action
 - Booking confirmation displayed in chat
@@ -220,11 +221,14 @@ The RAG system aggregates raw booking events into two computed structures. These
 
 ---
 
-### External APIs (all mocked)
-- Restaurant search and availability: Yelp API / OpenTable API
-- Geographic scope: major US neighborhoods across Chicago, Los Angeles, New York, San Francisco, Miami, Washington DC, Boston, Seattle, and Austin. The mock dataset returns real venue names and addresses for each neighborhood.
+### External APIs
+**Primary:** OpenAI GPT-4o (`gpt-4o`) via the OpenAI API — called first for all restaurant searches. Requires `OPENAI_API_KEY` set in `prototype/backend/.env`. Returns real venue names and addresses for any US city or neighborhood.
 
-If the API times out after one retry, explain in plain language and provide a link to OpenTable or Yelp.
+**Fallback:** Mock dataset — a local static list of real restaurants across Chicago, Los Angeles, New York, San Francisco, Miami, Washington DC, Boston, Seattle, and Austin. Used when OpenAI is unavailable or returns no results.
+
+**Search enrichment:** When the user has no visit history for the requested location and no explicit cuisine preference, the agent infers the user's top cuisine from their preference signals and includes it in the OpenAI query. This ensures the search is personalized even for locations the user has never booked in before.
+
+If both the OpenAI call and the mock fallback return no results, the agent explains in plain language and shows the neighborhoods it has guaranteed mock coverage for.
 
 ---
 
@@ -239,7 +243,9 @@ If the API times out after one retry, explain in plain language and provide a li
 4. Return patterns with support ≥ 3 and confidence ≥ 0.5 as ranked signals
 5. Use these signals to re-rank the options returned by the booking API — do not surface them as explicit suggestions to the user
 
-**Fallback:** If retrieval returns nothing relevant, rank results randomly (or by rating/price).
+**Fallback:** If retrieval returns nothing relevant, rank results by rating.
+
+**Preference-signal enrichment for new locations:** When `history_context_applies` is false (no visit history for the queried location and time bucket) and the user has not specified a cuisine, the agent reads `preference_signals.cuisines[0]` and passes the user's top cuisine to the OpenAI search. This means a user who historically prefers Italian will receive Italian suggestions in any new city, not a generic list. The mock fallback is called without this enrichment to preserve its existing filter behavior.
 
 **Freshness:** After every `log_action` call, re-embed the new record and update co-occurrence counts. The output of this aggregation is stored as **Restaurant History Records and Preference Signals** — see Section 6 (Derived Data Layer) for the full schemas, and `appendix/eval/user_history_schema.md` for the canonical schema reference. These are what `retrieve_behavioral_context` queries on every turn.
 
@@ -277,6 +283,37 @@ Expose two commands in the system prompt as first-class user rights:
 - **No extra features:** Do not add functionality beyond what is defined in this spec.
 - **Consistency:** Write code in a consistent structure and format throughout.
 - **No temp fixes:** Address the root cause of bugs, not symptoms.
+
+### Smart Defaults (added 2026-05-17)
+
+The agent minimizes clarifying questions by filling missing parameters from context and history before asking the user:
+
+| Parameter | Default rule |
+|---|---|
+| `date` | Today — if the user does not specify a date, the agent searches today. No question asked. |
+| `time_bucket` | `evening` — if no time keyword is present, evening is assumed. |
+| `location` | Top neighborhood from `preference_signals.neighborhoods[0]` — if the user has booking history, the agent uses their most-visited area as the default. If no history exists, the agent asks. |
+| `party_size` | Inferred from social context — phrases like "my friend Sarah", "me and John", or "meeting a friend" are interpreted as party of 2. Explicit numeric statements ("party of 4") always take priority. |
+
+**Only `location` is ever asked for.** Date, time, and party size are always resolvable from the message or from defaults. A user with history can say "find me dinner" and receive recommendations immediately with no follow-up questions.
+
+### Intent Inference Rules (added 2026-05-17)
+
+| Pattern | Behavior |
+|---|---|
+| "I'm meeting my friend / colleague / partner" | Infer party of 2; prime state to receive a neighborhood next |
+| "yeah [location]" / "ok [location]" | Strip leading affirmative before parsing location |
+| "what about X" / "how about X" | Treat X as a location answer in both CLARIFYING and SELECTING states |
+| Party size change only | Reuse the existing recommendation list with an updated header — do not re-run the search |
+| "Why did you change the recommendation?" | Explain that a search parameter changed and the list was refreshed; do not return a generic fallback |
+
+### Location Handling (added 2026-05-17)
+
+The agent no longer blocks on unrecognized neighborhoods. Any location is passed through to the search layer. The search order is:
+
+1. **OpenAI** — tried first for all locations. Personalized by inferred cuisine when no local history exists.
+2. **Mock data** — fallback if OpenAI is unavailable or returns no results.
+3. **"Couldn't find" message** — shown only after both layers return empty. Lists neighborhoods with guaranteed mock coverage and asks the user to pick one.
 
 ---
 
