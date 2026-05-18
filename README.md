@@ -20,6 +20,12 @@ A functional prototype and supporting documentation for the ChatGPT Life OS Cont
 
 Background and assignment documents are in `docs/reference/`.
 
+## Demo
+
+![Prototype demo](docs/assets/demo-screenshot.png)
+
+[Watch demo video](https://www.loom.com/share/97e320bc0f024e55a1de36d0ee624992)
+
 ## How to run the prototype
 
 See `prototype/README.md`.
