@@ -276,7 +276,7 @@ Expose two commands in the system prompt as first-class user rights:
 | Role | Model | API | When used |
 |---|---|---|---|
 | Restaurant search | GPT-4o (`gpt-4o`) | OpenAI API | Every search turn — finds real restaurants for any US location, personalized by inferred cuisine from preference signals when no local history exists |
-| General chat | Claude (via Claude Code CLI) | Subprocess | Non-booking messages that don't match reservation intent |
+| General chat | GPT-4o (`gpt-4o`) | OpenAI API | Non-booking messages that don't match reservation intent |
 | Eval judging | Claude Sonnet 4.6 (`claude-sonnet-4-6`) | Anthropic API | Offline eval runs only — scores D1, D2, D3, D4, D6 per prompt; falls back to string-match if API unavailable |
 
 **Keys required:**
