@@ -490,6 +490,9 @@ def _fill_defaults(params: dict, user_id: str) -> dict:
     if not params["date"]:
         params["date"] = datetime.now().strftime("%Y-%m-%d")
         filled["date"] = "today"
+    if not params["time_bucket"]:
+        params["time_bucket"] = "evening"
+        filled["time_bucket"] = "evening"
     if not params["location"]:
         signals = db.get_preference_signals(user_id) or {}
         neighborhoods = signals.get("neighborhoods", [])
@@ -817,6 +820,14 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
     if state["state"] == "SELECTING":
         recs = state["recommendations"]
 
+        # "what about X" / "how about X" — treat as location change
+        _sel_about_m = re.search(r'\b(?:what|how) about\b\s+(.+?)(?:\?|$)', msg_low)
+        if _sel_about_m:
+            _sel_loc = _parse_location(_sel_about_m.group(1).strip())
+            if _sel_loc and _sel_loc != state["params"]["location"]:
+                state["params"]["location"] = _sel_loc
+                return _do_recommendations(session_id, user_id, state, tool_log)
+
         # Answer questions — but first check if the question embeds a param change
         if _is_question(msg):
             new_party    = _parse_party_size_explicit(msg)
@@ -973,6 +984,18 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
 
     # ── CLARIFYING ─────────────────────────────────────────────
     if state["state"] == "CLARIFYING":
+        # "what about X" / "how about X" — extract X and treat as a location answer
+        _about_m = re.search(r'\b(?:what|how) about\b\s+(.+?)(?:\?|$)', msg_low)
+        if _about_m:
+            _about_loc = _parse_location(_about_m.group(1).strip())
+            if _about_loc:
+                state["params"]["location"] = _about_loc
+                _fill_defaults(state["params"], user_id)
+                return _do_recommendations(session_id, user_id, state, tool_log)
+            _about_candidate = _about_m.group(1).strip().title()
+            if _about_candidate:
+                return _unknown_location_response(_about_candidate)
+
         # If the message is a question or clearly off-topic, answer it without demanding a param
         if _is_question(msg):
             return {"response": _answer_question(msg, state), "tool_log": []}
@@ -988,11 +1011,17 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
         if asking == "location":
             if msg_low.strip() in _BARE_AFFIRMATIVES_SET:
                 return {"response": "Which neighborhood are you looking in? (e.g. Westwood, West Village, West Loop)", "tool_log": []}
-            loc = _parse_location(msg)
+            # Strip leading affirmative words so "yeah south beach" → "south beach"
+            _AFFIRM_PREFIXES = ["yeah ", "yes ", "yep ", "ok ", "okay ", "sure ", "alright ", "right "]
+            _clean = msg_low.strip()
+            for _pfx in _AFFIRM_PREFIXES:
+                if _clean.startswith(_pfx):
+                    _clean = _clean[len(_pfx):].strip()
+                    break
+            loc = _parse_location(_clean)
             if not loc:
-                stripped = msg.strip()
-                if len(stripped) > 2 and not any(c in stripped for c in ["?", "!", "."]):
-                    candidate = stripped.title()
+                if len(_clean) > 2 and not any(c in _clean for c in ["?", "!", "."]):
+                    candidate = _clean.title()
                     if not _is_known_location(candidate):
                         return _unknown_location_response(candidate)
                     loc = candidate
