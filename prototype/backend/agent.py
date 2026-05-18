@@ -984,7 +984,10 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             return {"response": _handle_general_chat(msg), "tool_log": []}
 
         asking = state["asking_for"]
+        _BARE_AFFIRMATIVES_SET = {"yes", "yeah", "yep", "yup", "ok", "okay", "sure", "alright", "right", "mhm"}
         if asking == "location":
+            if msg_low.strip() in _BARE_AFFIRMATIVES_SET:
+                return {"response": "Which neighborhood are you looking in? (e.g. Westwood, West Village, West Loop)", "tool_log": []}
             loc = _parse_location(msg)
             if not loc:
                 stripped = msg.strip()
@@ -1046,6 +1049,10 @@ def _run_turn(session_id: str, user_id: str, user_message: str) -> dict:
             state["params"]["time_bucket"] = _pre_tb
         if state["params"]["party_size"] == 1 and _is_social_pair(msg_low):
             state["params"]["party_size"] = 2
+        # If this is a meeting-context message, prime state to receive a neighborhood next
+        if any(kw in msg_low for kw in _MEETING_KEYWORDS):
+            state["state"] = "CLARIFYING"
+            state["asking_for"] = "location"
         return {"response": _handle_general_chat(msg), "tool_log": []}
 
     intent = _parse_intent(msg)
