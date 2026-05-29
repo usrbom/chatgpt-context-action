@@ -27,7 +27,7 @@ function VenueCard({ venue, index, onSelect, disabled }) {
             </div>
           </div>
         </div>
-        <span className="venue-card-your-pick">Your pick</span>
+        {venue.your_pick && <span className="venue-card-your-pick">Your pick</span>}
       </div>
       {venue.description && (
         <p className="venue-card-description">{venue.description}</p>

@@ -636,6 +636,7 @@ def _venue_card(r: dict) -> dict:
         "address": r.get("address", ""),
         "description": r.get("description", ""),
         "popular_items": r.get("popular_items", []) or [],
+        "your_pick": r.get("your_pick", False),
     }
 
 

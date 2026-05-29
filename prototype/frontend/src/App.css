@@ -222,13 +222,13 @@ body {
 
 .venue-card-your-pick {
   flex-shrink: 0;
-  background: #19c37d22;
+  background: transparent;
   color: #19c37d;
-  border: 1px solid #19c37d44;
-  padding: 2px 8px;
+  border: 1.5px solid #19c37d;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
   align-self: flex-start;
 }
@@ -292,6 +292,7 @@ body {
 .venue-card-address {
   color: #888;
   font-size: 11.5px;
+  flex: 1;
 }
 
 /* Action buttons (Confirm booking / See other options / Show different options) */

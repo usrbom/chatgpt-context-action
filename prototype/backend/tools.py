@@ -73,6 +73,8 @@ def get_recommendations(
 
     in_history.sort(key=lambda x: (-x[1], x[2]), reverse=False)
     in_history.sort(key=lambda x: (-x[1], [-ord(c) for c in x[2]]))
+    for v, _, _ in in_history:
+        v["your_pick"] = True
     ranked = [v for v, _, _ in in_history] + not_in_history
 
     top = ranked[:5]
