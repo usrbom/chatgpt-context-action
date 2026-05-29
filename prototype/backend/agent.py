@@ -342,18 +342,17 @@ def _handle_general_chat(msg: str) -> str:
             time_hint = " for lunch"
         return f"Would you like me to find a restaurant{time_hint}? Just tell me the neighborhood and I'll pull up options."
 
-    # Call GPT-4o for general chat
+    # Call Groq for general chat
     try:
-        from openai import OpenAI
-        client = OpenAI()
+        from groq import Groq
+        client = Groq()
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": _GENERAL_CHAT_SYSTEM},
                 {"role": "user", "content": msg},
             ],
             max_tokens=150,
-            timeout=30,
         )
         return response.choices[0].message.content.strip()
     except Exception:
