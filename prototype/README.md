@@ -23,7 +23,7 @@ Then type:
 Help me set up and run this project
 ```
 
-Claude will read the repo, install dependencies, create the `.env` file (it will ask for your OpenAI key), seed the database, and give you the exact commands to start the servers.
+Claude will read the repo, install dependencies, create the `.env` file (it will ask for your Groq key), seed the database, and give you the exact commands to start the servers.
 
 ---
 
@@ -40,9 +40,9 @@ cd prototype/backend
 pip install -r requirements.txt
 ```
 
-### 2. Add your OpenAI API key
+### 2. Add your Groq API key
 
-> The backend calls OpenAI to fetch real restaurant suggestions. Without a key it falls back to a small set of hardcoded venues — the app still works, but results won't be live.
+> The backend calls Groq to fetch real restaurant suggestions and handle chat. Without a key it falls back to a small set of hardcoded venues — the app still works, but results won't be live. Get a free key at [console.groq.com](https://console.groq.com).
 
 Create a file called `.env` inside `prototype/backend/`:
 
@@ -53,7 +53,7 @@ prototype/backend/.env
 Add this line to it (replace with your actual key):
 
 ```
-OPENAI_API_KEY=sk-your-key-here
+GROQ_API_KEY=gsk_your-key-here
 ```
 
 The backend loads this file automatically on startup. Do not commit it — it is already listed in `.gitignore`.
@@ -145,7 +145,7 @@ Scores D1 (tool selection), D2 (parameter accuracy), D4 (history grounding), D6 
 | `backend/agent.py` | Agent logic and conversation state machine |
 | `backend/tools.py` | Tool implementations (search, book, history) |
 | `backend/db.py` | SQLite read/write operations |
-| `backend/claude_search.py` | Live restaurant search via OpenAI |
+| `backend/claude_search.py` | Live restaurant search via Groq |
 | `backend/mock_api.py` | Fallback hardcoded restaurant data |
 | `backend/seed.py` | One-command database seeding |
 | `backend/eval_runner.py` | Eval script (dining, 60 prompts) |
@@ -157,11 +157,11 @@ Scores D1 (tool selection), D2 (parameter accuracy), D4 (history grounding), D6 
 
 | Term | What it means |
 |---|---|
-| **Backend** | The Python server that runs the agent logic, calls OpenAI, and reads/writes the database |
+| **Backend** | The Python server that runs the agent logic, calls Groq, and reads/writes the database |
 | **Frontend** | The chat UI you see in the browser — built with React |
 | **SQLite / data.db** | A lightweight database file stored locally — no separate database server needed |
 | **Seed data** | A pre-built set of fake booking history used to demo personalisation features |
 | **Behavioral history** | Past restaurant bookings used to rank results — the more you've visited a place, the higher it appears |
-| **Mock data** | Hardcoded fallback restaurants used when no OpenAI key is set |
+| **Mock data** | Hardcoded fallback restaurants used when no Groq key is set |
 | **RAG** | Retrieval-Augmented Generation — the technique of pulling relevant past behaviour before generating a response |
 | **`.env` file** | A local config file that stores secrets like API keys — never committed to git |
