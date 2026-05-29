@@ -27,14 +27,7 @@ function VenueCard({ venue, index, onSelect, disabled }) {
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          className="venue-card-select"
-          onClick={handleSelect}
-          disabled={disabled}
-        >
-          Select
-        </button>
+        <span className="venue-card-your-pick">Your pick</span>
       </div>
       {venue.description && (
         <p className="venue-card-description">{venue.description}</p>
@@ -46,9 +39,17 @@ function VenueCard({ venue, index, onSelect, disabled }) {
           ))}
         </div>
       )}
-      {venue.address && (
-        <div className="venue-card-address">{venue.address}</div>
-      )}
+      <div className="venue-card-bottom">
+        <span className="venue-card-address">{venue.address || ""}</span>
+        <button
+          type="button"
+          className="venue-card-select"
+          onClick={handleSelect}
+          disabled={disabled}
+        >
+          Select
+        </button>
+      </div>
     </div>
   );
 }

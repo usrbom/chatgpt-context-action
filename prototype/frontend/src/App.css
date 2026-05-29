@@ -220,6 +220,27 @@ body {
   color: #555;
 }
 
+.venue-card-your-pick {
+  flex-shrink: 0;
+  background: #19c37d22;
+  color: #19c37d;
+  border: 1px solid #19c37d44;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.venue-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
 .venue-card-select {
   background: #19c37d;
   color: #fff;
@@ -232,7 +253,6 @@ body {
   transition: background 0.15s, opacity 0.15s;
   font-family: inherit;
   flex-shrink: 0;
-  align-self: center;
 }
 
 .venue-card-select:hover:not(:disabled) {
@@ -272,7 +292,6 @@ body {
 .venue-card-address {
   color: #888;
   font-size: 11.5px;
-  margin-top: 2px;
 }
 
 /* Action buttons (Confirm booking / See other options / Show different options) */
