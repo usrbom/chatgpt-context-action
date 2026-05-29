@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
 pydantic
-openai
-anthropic
+groq
 python-dotenv

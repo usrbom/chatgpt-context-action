@@ -18,8 +18,8 @@ _client = None
 def _get_client():
     global _client
     if _client is None:
-        from openai import OpenAI
-        _client = OpenAI()
+        from groq import Groq
+        _client = Groq()
     return _client
 
 
@@ -99,18 +99,17 @@ def extract_intent(state: dict, message: str) -> dict | None:
     )
     try:
         response = _get_client().chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama3-8b-8192",
             messages=[
                 {"role": "system", "content": _SYSTEM},
                 {"role": "user", "content": user_block},
             ],
             max_tokens=200,
-            timeout=15,
             response_format={"type": "json_object"},
         )
         raw = response.choices[0].message.content.strip()
     except Exception as e:
-        log.warning("intent_llm: OpenAI error: %s", e)
+        log.warning("intent_llm: Groq error: %s", e)
         return None
 
     return _parse_intent_json(raw)

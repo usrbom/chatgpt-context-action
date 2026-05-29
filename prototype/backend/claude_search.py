@@ -11,8 +11,8 @@ _client = None
 def _get_client():
     global _client
     if _client is None:
-        from openai import OpenAI
-        _client = OpenAI()  # reads OPENAI_API_KEY from environment
+        from groq import Groq
+        _client = Groq()  # reads GROQ_API_KEY from environment
     return _client
 
 _REQUIRED_FIELDS = {
@@ -119,10 +119,9 @@ def _build_prompt(
 def _call_openai(prompt: str) -> str | None:
     try:
         response = _get_client().chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
-            timeout=30,
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
