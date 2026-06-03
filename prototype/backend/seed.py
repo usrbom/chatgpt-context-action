@@ -1,6 +1,7 @@
 """Seed the SQLite store with user history from user_history.json."""
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -17,6 +18,15 @@ def main() -> None:
         data = json.load(f)
 
     user_id = data["meta"]["user_id"]
+
+    # Shift last_visited dates to be relative to today so the 90-day history
+    # window never expires, regardless of when the repo was cloned.
+    reference_date = date.fromisoformat(data["meta"]["computed_at"][:10])
+    shift = date.today() - reference_date
+    for record in data["restaurant_history"]:
+        original = date.fromisoformat(record["last_visited"])
+        record["last_visited"] = (original + shift).isoformat()
+    data["preference_signals"]["computed_at"] = date.today().isoformat() + "T00:00:00Z"
 
     # Clear existing data for demo user
     db.delete_user_data(user_id)

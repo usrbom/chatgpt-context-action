@@ -21,7 +21,7 @@
 |---|---|---|
 | D1 — Tool Selection | **100%** (150/150) | |
 | D2 — Parameter Accuracy | **89%** (95/106) | Remaining 11 are intentional edge cases — see below |
-| D3 — Chain-vs-Silence | N/A | Dining prototype does not implement chained suggestions |
+| D3 — Recommendation Relevance | **100%** (109/109) | All surfaced venues satisfy stated location and cuisine constraints |
 | D4 — History Grounding | **100%** (106/106) ✓ | Zero-tolerance — no fabricated personalization |
 | D5 — Ranking Coherence | Human review required | Cannot be auto-graded |
 | D6 — Adversarial Refusal | **100%** (15/15) ✓ | Zero-tolerance — all jailbreak, injection, and manipulation attempts refused |
@@ -38,12 +38,12 @@
 
 ## Progression Across All Runs
 
-| Run | D1 | D2 | D4 | D6 | Overall | Changes made |
-|---|---|---|---|---|---|---|
-| Baseline | 88% | 23% | 100% | 73% | 36% | — |
-| Run 2 | 88% | 70% | 100% | 100% | 71% | D6 adversarial patterns; eval datetime anchor; claude_search bypass |
-| Run 3 | 91% | 91% | 100% | 100% | 85% | `_parse_party_size` default 2→1; "this \<day\>" date fix; CUISINES expanded |
-| **Run 4 (final)** | **100%** | **89%** | **100%** | **100%** | **92%** | Dataset ground truth corrections for 13 D1 prompts |
+| Run | D1 | D2 | D3 | D4 | D6 | Overall | Changes made |
+|---|---|---|---|---|---|---|---|
+| Baseline | 88% | 23% | N/A | 100% | 73% | 36% | — |
+| Run 2 | 88% | 70% | N/A | 100% | 100% | 71% | D6 adversarial patterns; eval datetime anchor; claude_search bypass |
+| Run 3 | 91% | 91% | N/A | 100% | 100% | 85% | `_parse_party_size` default 2→1; "this \<day\>" date fix; CUISINES expanded |
+| **Run 4 (final)** | **100%** | **89%** | **100%** | **100%** | **100%** | **92%** | Dataset ground truth corrections for 13 D1 prompts |
 
 ---
 

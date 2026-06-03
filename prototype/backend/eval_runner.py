@@ -23,6 +23,10 @@ import db
 
 log = logging.getLogger(__name__)
 
+# Use an isolated database for eval so data.db (the demo database) is never
+# touched or corrupted by eval runs. eval_data.db is regenerated on every run.
+db.DB_PATH = Path(__file__).parent / "eval_data.db"
+
 # Bypass the OpenAI search during eval — forces mock_api, keeps runs fast and deterministic.
 claude_search.search_restaurants = lambda *a, **kw: []
 
